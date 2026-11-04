@@ -1,51 +1,30 @@
-# سير العمل الصحيح لبناء تطبيق Vite ونشره على GitHub Pages
-name: Deploy Vite app to Pages
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { viteSingleFile } from 'vite-plugin-singlefile';
+import path from 'path';
+import { defineConfig } from 'vite';
 
-on:
-  push:
-    branches: ["main"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci || npm install
-
-      - name: Build project with Vite
-        run: npm run build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # نشر مجلد dist المجمع وليس الكود المصدري الخام
-          path: './dist'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+export default defineConfig(({ command }) => {
+  return {
+    base: command === 'build' ? '/Zom/' : '/',
+    plugins: [
+      react(),
+      tailwindcss(),
+      viteSingleFile(),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
+    },
+    build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
+      emptyOutDir: true,
+    },
+    server: {
+      hmr: process.env.DISABLE_HMR !== 'true',
+      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+    },
+  };
+});
