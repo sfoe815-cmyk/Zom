@@ -1,0 +1,6 @@
+{
+  "name": "Aisle of the Dead - Supermarket Last Stand",
+  "description": "لعبة بقاء ودفاع ثنائية الأبعاد مستوحاة من ذا لاست ستاند في سوبرماركت مهجور، مع نظام صناعة، تمشيط المؤن، وبناء المتاريس وتجنيد الناجين.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="100" fill="#090d16"/>
+  <circle cx="256" cy="256" r="220" fill="#1e293b" stroke="#f59e0b" stroke-width="12"/>
+  <!-- Shopping Cart Silhouette -->
+  <path d="M130 150h50l35 150h175l30-110H200" fill="none" stroke="#f59e0b" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="230" cy="350" r="24" fill="#f59e0b"/>
+  <circle cx="370" cy="350" r="24" fill="#f59e0b"/>
+  <!-- Skull in cart -->
+  <circle cx="290" cy="200" r="42" fill="#ef4444"/>
+  <circle cx="275" cy="195" r="9" fill="#090d16"/>
+  <circle cx="305" cy="195" r="9" fill="#090d16"/>
+  <path d="M280 230h20v14h-20z" fill="#f8fafc"/>
+</svg>
