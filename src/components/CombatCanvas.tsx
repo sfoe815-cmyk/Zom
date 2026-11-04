@@ -15,6 +15,7 @@ import {
   FloatingText,
   LandmineEntity,
   AcidProjectile,
+  TentacleData,
   Language,
   Resources
 } from '../types/game';
@@ -1721,7 +1722,7 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
   // Survivor recruitment scaling:
   // "وايضا عندما يحصل لاعب على ناجي يزدد عدد زومبي 50 زومبي في جميع اليلي ماعدا ليلي التي بها زعماء واذا حصل لاعب على ناجي ثاني سيزداد عدد زومبي" (+100 for second survivor, total +150)
   const recruitedCount = survivors.filter(s => s.isRecruited && !s.isDead).length;
-  const isBossNight = day === 3;
+  const isBossNight = day === 3 || day === 6;
   const survivorBonus = isBossNight ? 0 : (recruitedCount === 1 ? 50 : recruitedCount >= 2 ? 150 : 0);
   const baseZombies = day === 1 
     ? 35 
@@ -2057,13 +2058,20 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
 
       targets.forEach((target, i) => {
         setTimeout(() => {
-          if (target.isDead) return;
-          target.headless = true;
-          target.hp = 0;
-          target.isDead = true;
-          target.deathAnimTimer = 30;
-          g.zombiesKilled++;
-          g.headshots++;
+          if (target.isBoss) {
+            target.hp = Math.max(0, target.hp - 1800);
+            if (target.hp <= 0 && !target.isDying) {
+              target.isDying = true;
+              target.deathAnimTimer = 35;
+            }
+          } else {
+            target.headless = true;
+            target.hp = 0;
+            target.isDead = true;
+            target.deathAnimTimer = 30;
+            g.zombiesKilled++;
+            g.headshots++;
+          }
           if (day === 4) {
             g.nightHeadshotKills++;
             setDay4Headshots(g.nightHeadshotKills);
@@ -2829,8 +2837,30 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
       // Smooth player movement
       g.playerY += (g.targetPlayerY - g.playerY) * 0.15;
 
-      // Batch Wave Spawning for Normal Nights vs Night 3 Boss
-      if (day !== 3) {
+      // Wave Spawning: Day 3 (Glutton Boss), Day 6 (3-Tentacle Boss), and Regular Nights
+      if (day === 6) {
+        // Day 6: 3-Tentacle Boss Night!
+        const livingZombies = g.zombies.filter(z => !z.isDead && !z.isDying).length;
+        const remainingToSpawn = g.totalZombiesToSpawn - g.zombiesSpawned;
+
+        if (g.batchWaveStep === 1) {
+          const count = Math.min(12, remainingToSpawn);
+          for (let b = 0; b < count; b++) {
+            spawnSingleZombie();
+          }
+          if (count > 0) audio.playZombieGroan(1.15);
+          g.batchWaveStep = 2;
+        } else if (g.batchWaveStep === 2 && !g.bossSpawned) {
+          spawnTentacleBoss();
+          g.batchWaveStep = 3;
+        } else if (g.batchWaveStep === 3 && livingZombies <= 4 && remainingToSpawn > 0) {
+          const count = Math.min(10, remainingToSpawn);
+          for (let b = 0; b < count; b++) {
+            spawnSingleZombie();
+          }
+          g.batchWaveStep = 4;
+        }
+      } else if (day !== 3) {
         // Normal Nights: Batch Spawning
         // Wave 1: Exactly 20 zombies spawn all at once at the start
         // When living zombies drop to 10 or fewer: Wave 2 spawns 25 zombies all at once
@@ -2869,7 +2899,7 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         }
       } else {
         // Day 3 Glutton Boss Night
-        if (g.wave >= 3 && !g.bossSpawned) {
+        if (g.wave >= 2 && !g.bossSpawned) {
           spawnGluttonBoss();
         }
 
@@ -2879,10 +2909,10 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
             spawnTrioPackRunners();
           }
 
-          if (currentTime >= g.nextZombieSpawnTime && g.zombiesSpawnedInWave < g.zombiesPerWave && g.zombiesSpawned < g.totalZombiesToSpawn) {
+          if (currentTime >= g.nextZombieSpawnTime && g.zombiesSpawned < g.totalZombiesToSpawn && (g.wave === 4 || g.zombiesSpawnedInWave < g.zombiesPerWave)) {
             spawnSingleZombie();
-            const baseDelay = Math.max(300, 720 - day * 70);
-            g.nextZombieSpawnTime = currentTime + baseDelay + Math.random() * 220;
+            const baseDelay = Math.max(250, 600 - day * 60);
+            g.nextZombieSpawnTime = currentTime + baseDelay + Math.random() * 180;
           }
 
           const livingZombies = g.zombies.filter(z => !z.isDead && !z.isDying).length;
@@ -3033,6 +3063,7 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
               // Boss grabs the zombie and devours it!
               other.isDead = true;
               other.deathAnimTimer = 5;
+              g.zombiesKilled++;
               boss.hp = Math.min(boss.maxHp, boss.hp + 75);
               audio.playZombieHit();
               audio.playZombieGroan(1.2);
@@ -3204,7 +3235,89 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
           }
 
           if (zombie.type === 'armored' && !isHead) {
-            finalDamage = Math.max(4, Math.round(finalDamage * 0.45));
+            finalDamage = 0;
+            audio.playMechanicalClick();
+            for (let sp = 0; sp < 3; sp++) {
+              g.particles.push({
+                x: zombie.x - 6,
+                y: hitSubY,
+                vx: -(2 + Math.random() * 2),
+                vy: (Math.random() - 0.5) * 3,
+                color: '#facc15',
+                size: 2,
+                life: 6,
+                maxLife: 6
+              });
+            }
+          }
+
+          // 3-TENTACLE BOSS: Only takes damage on its tentacles!
+          // "زعيم مجسات لا يتاثر بطلقات النار الا اذا كانت على مجساته وتكون نهاية مجساته مخلب مدبب وايضا عندما يصل صحة مجساته الى صفر تسقط ويخرج منه دماء لمدة اربع ثواني ويتالم ويصبح اسرع قليلا وعندما يفقد ثلاثة مجساته اجعل له انيمشن يسقط على الارض على ضهره ويرفع يديه لبشريتين فوق وثم تنتهي ليلة"
+          if (zombie.type === 'boss_tentacle') {
+            let hitTentacle: TentacleData | null = null;
+            if (zombie.tentacles) {
+              const offsets = [-28, 0, 28];
+              for (let tIdx = 0; tIdx < zombie.tentacles.length; tIdx++) {
+                const tent = zombie.tentacles[tIdx];
+                if (tent.isSevered) continue;
+                const tentY = zombie.y + offsets[tIdx];
+                if (Math.abs(hitSubY - tentY) <= 26) {
+                  hitTentacle = tent;
+                  break;
+                }
+              }
+            }
+
+            if (hitTentacle) {
+              hitTentacle.hp = Math.max(0, hitTentacle.hp - finalDamage);
+              audio.playZombieHit();
+              for (let bp = 0; bp < 5; bp++) {
+                g.particles.push({
+                  x: zombie.x - 45,
+                  y: hitSubY,
+                  vx: -(1 + Math.random() * 3),
+                  vy: (Math.random() - 0.5) * 3,
+                  color: '#dc2626',
+                  size: 2.5,
+                  life: 12,
+                  maxLife: 12
+                });
+              }
+
+              if (hitTentacle.hp <= 0 && !hitTentacle.isSevered) {
+                hitTentacle.hp = 0;
+                hitTentacle.isSevered = true;
+                hitTentacle.severBleedTimer = 240; // 4 seconds of arterial blood at 60fps
+                zombie.tentaclesSeveredCount = (zombie.tentaclesSeveredCount || 0) + 1;
+                zombie.speed += 0.12; // "ويصبح اسرع قليلا"
+                zombie.isPainStunned = true; // "ويتالم"
+                zombie.painStunTimer = 40;
+                audio.playZombieGroan(1.3);
+                setScreenShake(8);
+
+                if (zombie.tentaclesSeveredCount >= 3) {
+                  zombie.isFallingBackOnGround = true;
+                  zombie.fallBackTimer = 110;
+                  audio.playZombieGroan(0.5);
+                }
+              }
+            } else {
+              // Body shots are completely deflected!
+              finalDamage = 0;
+              audio.playMechanicalClick();
+              for (let sp = 0; sp < 3; sp++) {
+                g.particles.push({
+                  x: zombie.x - 12,
+                  y: hitSubY,
+                  vx: -(2 + Math.random() * 2),
+                  vy: (Math.random() - 0.5) * 3,
+                  color: '#c084fc',
+                  size: 2,
+                  life: 6,
+                  maxLife: 6
+                });
+              }
+            }
           }
 
           // Check if this shot kills the zombie
@@ -3559,35 +3672,46 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
             zombie.isDead = true;
             zombie.deathAnimTimer = 0;
             g.bossDefeated = true;
-            g.zombiesKilled++;
+            g.zombiesKilled = g.totalZombiesToSpawn;
+            g.zombiesSpawned = g.totalZombiesToSpawn;
             audio.playExplosion();
-            setScreenShake(26);
+            setScreenShake(24);
             g.bloodFlashAlpha = 0.6;
 
-            // 85+ flying blood, viscera and bone shards
-            for (let p = 0; p < 85; p++) {
+            // Immediately eliminate any remaining minions so Night 3 ends without delay!
+            g.zombies.forEach(other => {
+              if (other !== zombie && !other.isDead) {
+                other.isDead = true;
+                other.deathAnimTimer = 5;
+              }
+            });
+            setRemainingZombies(0);
+            setNightProgress(100);
+
+            // Lightweight crisp flying blood and bone shards (optimized for zero lag)
+            for (let p = 0; p < 32; p++) {
               const ang = Math.random() * Math.PI * 2;
-              const spd = 4 + Math.random() * 9;
+              const spd = 3 + Math.random() * 6;
               g.particles.push({
                 x: zombie.x,
                 y: zombie.y,
                 vx: Math.cos(ang) * spd,
                 vy: Math.sin(ang) * spd,
                 color: Math.random() < 0.6 ? '#991b1b' : Math.random() < 0.85 ? '#dc2626' : '#f8fafc',
-                size: 3 + Math.random() * 4,
-                life: 35,
-                maxLife: 35
+                size: 2.5 + Math.random() * 2,
+                life: 22,
+                maxLife: 22
               });
             }
 
-            // Splatter 14 large blood decals across supermarket floor!
-            for (let s = 0; s < 14; s++) {
+            // Splatter 6 blood decals across floor
+            for (let s = 0; s < 6; s++) {
               g.bloodStains.push({
-                x: Math.max(260, Math.min(960, zombie.x + (Math.random() - 0.5) * 380)),
-                y: Math.max(140, Math.min(490, zombie.y + (Math.random() - 0.5) * 200)),
-                r: 14 + Math.random() * 20,
+                x: Math.max(260, Math.min(960, zombie.x + (Math.random() - 0.5) * 350)),
+                y: Math.max(140, Math.min(490, zombie.y + (Math.random() - 0.5) * 180)),
+                r: 12 + Math.random() * 14,
                 alpha: 0.85,
-                life: 180, // 3 seconds @ 60fps
+                life: 180,
                 maxLife: 180
               });
             }
@@ -3603,6 +3727,46 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
             });
           }
           continue;
+        }
+
+        // TENTACLE BOSS LOGIC: 4-second arterial bleeding, pain stun, and fallen surrender
+        if (zombie.type === 'boss_tentacle') {
+          if (zombie.tentacles) {
+            zombie.tentacles.forEach(t => {
+              if (t.isSevered && t.severBleedTimer && t.severBleedTimer > 0) {
+                t.severBleedTimer--;
+              }
+            });
+          }
+
+          if (zombie.isPainStunned && zombie.painStunTimer) {
+            zombie.painStunTimer--;
+            if (zombie.painStunTimer <= 0) {
+              zombie.isPainStunned = false;
+            }
+          }
+
+          if (zombie.isFallingBackOnGround) {
+            zombie.speed = 0;
+            if (zombie.fallBackTimer && zombie.fallBackTimer > 0) {
+              zombie.fallBackTimer--;
+              if (zombie.fallBackTimer <= 1) {
+                zombie.isDead = true;
+                g.bossDefeated = true;
+                g.zombiesKilled = g.totalZombiesToSpawn;
+                g.zombiesSpawned = g.totalZombiesToSpawn;
+                g.zombies.forEach(other => {
+                  if (other !== zombie && !other.isDead) {
+                    other.isDead = true;
+                    other.deathAnimTimer = 5;
+                  }
+                });
+                setRemainingZombies(0);
+                setNightProgress(100);
+              }
+            }
+            continue;
+          }
         }
 
         // SPITTER ZOMBIE LOGIC: 3 steps forward (~65px), then spits acid!
@@ -3820,18 +3984,32 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
       // Living zombies on screen (actively threatening the supermarket)
       const livingZombiesCount = g.zombies.filter(z => !z.isDead && !z.isDying).length;
 
-      // In Night 3 (Boss Night): Night does not end until the Glutton Boss is spawned and defeated! ("لاتنتهي ليلة الا بموته")
+      // In Night 3: Night ends IMMEDIATELY when Glutton Boss is defeated! ("اخبرتك ان ليلة ثالثه تنتهي عندما يموت الزعيم لا داعي الى قتل جميع زومبي")
+      // In Night 6: Night ends IMMEDIATELY when 3-tentacle boss is defeated!
       const isNight3BossAlive = day === 3 && (!g.bossSpawned || !g.bossDefeated);
+      const isNight6BossAlive = day === 6 && (!g.bossSpawned || !g.bossDefeated);
 
-      // Victory Condition for the Night: Trigger when all zombies are killed and no living zombies remain!
+      // Victory Condition for the Night: Instant victory on boss defeat or full wave elimination
       const allQuotaSpawnedAndDead = (g.zombiesSpawned >= g.totalZombiesToSpawn || g.zombiesKilled >= g.totalZombiesToSpawn) && livingZombiesCount === 0;
       const isNightVictory = 
-        !g.isEnded && 
-        !isNight3BossAlive && 
-        (allQuotaSpawnedAndDead || (day === 3 && g.bossDefeated && livingZombiesCount === 0));
+        !g.isEnded && (
+          (day === 3 && g.bossSpawned && g.bossDefeated) ||
+          (day === 6 && g.bossSpawned && g.bossDefeated) ||
+          (allQuotaSpawnedAndDead && !isNight3BossAlive && !isNight6BossAlive)
+        );
 
       if (isNightVictory) {
         g.isEnded = true;
+        if (day === 3 || day === 6) {
+          g.zombies.forEach(z => {
+            if (!z.isDead) {
+              z.isDead = true;
+              z.deathAnimTimer = 5;
+            }
+          });
+          setRemainingZombies(0);
+          setNightProgress(100);
+        }
         audio.playCashRegister();
         onNightComplete({
           day,
@@ -3900,35 +4078,40 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
       });
 
       // Fire Zones
+      // Fire Zones (High-speed flat fills without GPU gradient allocation churn)
       g.fireZones.forEach(fire => {
-        const grad = ctx.createRadialGradient(fire.x, fire.y, 5, fire.x, fire.y, fire.radius);
-        grad.addColorStop(0, 'rgba(251, 146, 60, 0.7)');
-        grad.addColorStop(0.6, 'rgba(234, 88, 12, 0.4)');
-        grad.addColorStop(1, 'rgba(154, 52, 18, 0)');
-        ctx.fillStyle = grad;
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.42)';
         ctx.beginPath();
         ctx.arc(fire.x, fire.y, fire.radius, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.fillStyle = 'rgba(251, 146, 60, 0.65)';
+        ctx.beginPath();
+        ctx.arc(fire.x, fire.y, fire.radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
       });
 
-      // Flashlight beam from gun to mouse
+      // Flashlight beam from gun to mouse (Optimized dual-layered cone)
       const pX = 180;
       const pY = g.playerY;
       const aimAngle = Math.atan2(g.mouseY - pY, g.mouseX - pX);
-      const beamLength = 800;
+      const beamLength = 700;
       const beamSpread = 0.28;
 
       ctx.save();
-      const flashGrad = ctx.createRadialGradient(pX, pY, 20, pX, pY, beamLength);
-      flashGrad.addColorStop(0, 'rgba(254, 240, 138, 0.22)');
-      flashGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.09)');
-      flashGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
-
       ctx.beginPath();
       ctx.moveTo(pX, pY);
       ctx.arc(pX, pY, beamLength, aimAngle - beamSpread, aimAngle + beamSpread);
       ctx.closePath();
-      ctx.fillStyle = flashGrad;
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.09)';
+      ctx.fill();
+
+      // Bright inner core
+      ctx.beginPath();
+      ctx.moveTo(pX, pY);
+      ctx.arc(pX, pY, beamLength * 0.5, aimAngle - beamSpread * 0.4, aimAngle + beamSpread * 0.4);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.13)';
       ctx.fill();
       ctx.restore();
 
@@ -4179,8 +4362,8 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
       ctx.restore();
 
       // Draw Particles (Fast crisp pixel art rectangles, capped to maintain 60 FPS)
-      if (g.particles.length > 55) {
-        g.particles.splice(0, g.particles.length - 55);
+      if (g.particles.length > 35) {
+        g.particles.splice(0, g.particles.length - 35);
       }
       for (let p = g.particles.length - 1; p >= 0; p--) {
         const pt = g.particles[p];
@@ -4197,7 +4380,7 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         }
       }
 
-      // Floating Texts
+      // Floating Texts (Optimized strokeText outline instead of heavy GPU shadowBlur pass)
       for (let ft = g.floatingTexts.length - 1; ft >= 0; ft--) {
         const textItem = g.floatingTexts[ft];
         textItem.y -= 0.8;
@@ -4205,10 +4388,11 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
 
         ctx.save();
         ctx.font = 'bold 13px "Chakra Petch", "Tajawal", sans-serif';
-        ctx.fillStyle = textItem.color;
         ctx.textAlign = 'center';
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 4;
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 2.5;
+        ctx.strokeText(textItem.text, textItem.x, textItem.y);
+        ctx.fillStyle = textItem.color;
         ctx.fillText(textItem.text, textItem.x, textItem.y);
         ctx.restore();
 
