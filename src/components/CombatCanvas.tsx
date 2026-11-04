@@ -1577,7 +1577,7 @@ function drawTentacleBoss(
   if (z.tentacles) {
     z.tentacles.forEach((tentacle, idx) => {
       const rootX = z.x - 16;
-      const rootY = z.y + tentacle.currentYOffset + heavyBob;
+      const rootY = z.y + (tentacle.currentYOffset ?? 0) + heavyBob;
 
       if (tentacle.isSevered) {
         // Bloody severed stump
@@ -2794,9 +2794,9 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         color: '#9333ea',
         headRadius: 18,
         tentacles: [
-          { id: 1, hp: 3000, maxHp: 3000, isSevered: false, wavePhase: 0, severBleedTimer: 0 },
-          { id: 2, hp: 3000, maxHp: 3000, isSevered: false, wavePhase: 2.1, severBleedTimer: 0 },
-          { id: 3, hp: 3000, maxHp: 3000, isSevered: false, wavePhase: 4.2, severBleedTimer: 0 }
+          { id: 1, hp: 3000, maxHp: 3000, isSevered: false, wavePhase: 0, severBleedTimer: 0, currentYOffset: 0 },
+          { id: 2, hp: 3000, maxHp: 3000, isSevered: false, wavePhase: 2.1, severBleedTimer: 0, currentYOffset: 0 },
+          { id: 3, hp: 3000, maxHp: 3000, isSevered: false, wavePhase: 4.2, severBleedTimer: 0, currentYOffset: 0 }
         ],
         tentaclesSeveredCount: 0,
         isFallingBackOnGround: false

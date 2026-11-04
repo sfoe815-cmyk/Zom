@@ -139,7 +139,7 @@ export interface TentacleData {
   maxHp: number;
   isSevered: boolean;
   severBleedTimer?: number; // 4 seconds of blood spewing (240 frames)
-  currentYOffset: number;
+  currentYOffset?: number;
   wavePhase: number;
 }
 
