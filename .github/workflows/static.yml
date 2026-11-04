@@ -1,4 +1,3 @@
-# سير العمل الصحيح لبناء تطبيق Vite ونشره على GitHub Pages
 name: Deploy static content to Pages
 
 on:
