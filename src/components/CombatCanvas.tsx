@@ -255,33 +255,47 @@ function drawHeroCharacter(
     ctx.fillRect(22, -2, 22, 3);
     ctx.fillStyle = '#92400e';
     ctx.fillRect(26, 1, 10, 4);
-  } else if (activeWeapon.id === 'hunting_rifle') {
-    ctx.fillStyle = '#78350f';
-    ctx.fillRect(12, 0, 18, 5);
+  } else if (activeWeapon.id === 'pkc') {
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(22, -2, 26, 3);
+    ctx.fillRect(14, -3, 30, 7);
+    ctx.fillStyle = '#15803d'; // green ammo box
+    ctx.fillRect(24, 3, 10, 8);
     ctx.fillStyle = '#0f172a';
-    ctx.fillRect(20, -5, 12, 3);
-  } else if (activeWeapon.id === 'uzi') {
+    ctx.fillRect(44, -2, 10, 3);
+  } else if (activeWeapon.id === 'mp40') {
+    // MP40 Submachine Gun
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(16, -3, 16, 8);
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(30, -1, 8, 3);
-    ctx.fillStyle = '#334155';
-    ctx.fillRect(20, 5, 4, 10);
+    ctx.fillRect(14, -2, 26, 5); // receiver
+    ctx.fillStyle = '#0f172a'; // slender barrel
+    ctx.fillRect(40, -1, 10, 3);
+    ctx.fillStyle = '#334155'; // 30-round vertical magazine
+    ctx.fillRect(26, 3, 5, 14);
+    ctx.fillStyle = '#64748b'; // folding wire stock
+    ctx.fillRect(8, 0, 6, 3);
+  } else if (activeWeapon.id === 'nail_gun') {
+    // Pneumatic Twin Nail Gun
+    ctx.fillStyle = '#334155'; // gunmetal body
+    ctx.fillRect(14, -3, 22, 7);
+    ctx.fillStyle = '#dc2626'; // red air canister / industrial housing
+    ctx.fillRect(12, 2, 8, 5);
+    ctx.fillStyle = '#94a3b8'; // twin barrel ejection mouth
+    ctx.fillRect(36, -3, 5, 4);
+    ctx.fillStyle = '#0f172a'; // nail magazine
+    ctx.fillRect(22, 4, 6, 8);
+    ctx.fillStyle = '#f8fafc'; // visible steel nails
+    ctx.fillRect(23, 6, 4, 2);
+    ctx.fillRect(23, 9, 4, 2);
   } else {
-    // Pistol Lvl 3 (from screenshot!)
-    ctx.fillStyle = '#0f172a'; // slide
-    ctx.fillRect(18, -2, 16, 5);
-    ctx.fillStyle = '#334155';
-    ctx.fillRect(16, 1, 6, 6); // grip
-    ctx.fillStyle = '#64748b'; // barrel tip
-    ctx.fillRect(33, -1, 2, 3);
+    // Knife or default
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(18, -1, 14, 3);
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(12, -1, 6, 4);
   }
 
   // Starburst Muzzle Flash when shooting
   if (isShooting) {
-    const muzzleX = activeWeapon.id === 'hunting_rifle' ? 48 : activeWeapon.id === 'shotgun' ? 44 : 35;
+    const muzzleX = activeWeapon.id === 'pkc' ? 52 : activeWeapon.id === 'shotgun' ? 44 : activeWeapon.id === 'mp40' ? 48 : 38;
     
     // Outer fiery orange starburst
     ctx.fillStyle = '#f59e0b';
@@ -1437,9 +1451,8 @@ function drawArmoredZombie(
 }
 
 // 6. THREE-TENTACLE ZOMBIE BOSS (زعيم الزومبي ذو الثلاث مجسات - الليلة السادسة)
-// Invulnerable body. Only dies by severing all 3 tentacles (each has 3000 HP)!
-// Pointed sharp claws at ends. 4 seconds of blood spewing when severed.
-// Death animation: collapses on back on the ground and raises human hands up towards the sky!
+// 6. THREE-TENTACLE ZOMBIE BOSS (زعيم الزومبي ذو الثلاث مجسات - الليلة السادسة)
+// "زعيم ثاني الذي يظهر في ليلة سادسة الذي اسمه زعيم المجسات مظهره سيى جدا ولماذا تجعل معه الكثير من زومبي قم بتغير مظهره واجعله ضعيف البنية جسدية واجعل له ثلاثة مجسات تظهر من جسمة كانها تشبه مجسات الاخطبوط وجعل مظهره بيكسل ارت جميل"
 function drawTentacleBoss(
   ctx: CanvasRenderingContext2D,
   z: ZombieEntity,
@@ -1447,71 +1460,76 @@ function drawTentacleBoss(
   language: 'ar' | 'en'
 ) {
   ctx.save();
-  const zLeft = z.x - z.width / 2;
   const zTop = z.y - z.height / 2;
 
   // Ground shadow
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
   ctx.beginPath();
-  ctx.ellipse(z.x, z.y + z.height / 2 + 2, z.width / 2 + 15, 11, 0, 0, Math.PI * 2);
+  ctx.ellipse(z.x, z.y + z.height / 2 + 2, 26, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // DYING ANIMATION: Collapsed on back, raising two human hands up
+  // DYING ANIMATION: Collapsed on back, raising two frail human hands up
   // "وعندما يفقد ثلاثة مجساته اجعل له انيمشن يسقط على الارض على ضهره ويرفع يديه لبشريتين فوق وثم تنتهي ليلة"
   if (z.isFallingBackOnGround || (z.isDying && (z.tentaclesSeveredCount || 0) >= 3)) {
     const fallenY = z.y + 12;
 
     // Expanding blood pool under fallen boss
-    ctx.fillStyle = '#581c87';
+    ctx.fillStyle = '#4a044e';
     ctx.beginPath();
-    ctx.ellipse(z.x, fallenY + 12, 48, 14, 0, 0, Math.PI * 2);
+    ctx.ellipse(z.x, fallenY + 12, 46, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#7f1d1d';
     ctx.beginPath();
-    ctx.ellipse(z.x, fallenY + 12, 38, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(z.x, fallenY + 12, 34, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Fallen body lying flat on back
-    ctx.fillStyle = '#1e1b4b'; // dark mutated carapace
-    ctx.fillRect(z.x - 30, fallenY - 6, 60, 20);
-    ctx.fillStyle = '#312e81';
-    ctx.fillRect(z.x - 24, fallenY - 4, 48, 16);
+    // Fallen frail body lying flat on back
+    ctx.fillStyle = '#1e293b'; // frail torn dark lab gown
+    ctx.fillRect(z.x - 26, fallenY - 4, 52, 14);
+    // Exposed gaunt ribcage
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(z.x - 14, fallenY - 2, 4, 10);
+    ctx.fillRect(z.x - 6, fallenY - 2, 4, 10);
+    ctx.fillRect(z.x + 2, fallenY - 2, 4, 10);
 
-    // Severed shoulder tentacle stumps (blood oozing)
-    ctx.fillStyle = '#991b1b';
-    ctx.fillRect(z.x - 22, fallenY - 9, 10, 5);
-    ctx.fillRect(z.x + 12, fallenY - 9, 10, 5);
+    // Severed tentacle stumps (dark purple oozing blood)
+    ctx.fillStyle = '#581c87';
+    ctx.fillRect(z.x - 20, fallenY - 8, 8, 5);
+    ctx.fillRect(z.x + 8, fallenY - 8, 8, 5);
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(z.x - 19, fallenY - 7, 6, 3);
+    ctx.fillRect(z.x + 9, fallenY - 7, 6, 3);
 
-    // Fallen head tilted back
-    ctx.fillStyle = '#2e1065';
+    // Fallen frail skull head tilted back
+    ctx.fillStyle = '#475569';
     ctx.beginPath();
-    ctx.arc(z.x + 28, fallenY + 2, 12, 0, Math.PI * 2);
+    ctx.arc(z.x + 24, fallenY + 2, 10, 0, Math.PI * 2);
     ctx.fill();
-    // Dead pale purple eyes
-    ctx.fillStyle = '#a855f7';
-    ctx.fillRect(z.x + 26, fallenY - 1, 2, 2);
+    // Dead hollow eye sockets
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(z.x + 22, fallenY - 1, 3, 3);
 
-    // TWO HUMAN HANDS RAISED UP TOWARD THE SKY IN SURRENDER/DEATH!
-    const tremor = Math.sin(currentTime * 0.03) * 1.5;
-    ctx.fillStyle = '#82a567'; // human rotting flesh forearm
-    ctx.fillRect(z.x - 14, fallenY - 32 + tremor, 6, 26);
-    // Human hand & spread fingers pointing UP
-    ctx.fillStyle = '#a3e635';
-    ctx.fillRect(z.x - 16, fallenY - 38 + tremor, 9, 7);
-    ctx.fillStyle = '#f8fafc'; // fingernails
-    ctx.fillRect(z.x - 16, fallenY - 41 + tremor, 2, 3);
-    ctx.fillRect(z.x - 13, fallenY - 43 + tremor, 2, 5);
-    ctx.fillRect(z.x - 10, fallenY - 42 + tremor, 2, 4);
+    // TWO FRAIL HUMAN HANDS RAISED UP TOWARD THE SKY IN SURRENDER/DEATH!
+    const tremor = Math.sin(currentTime * 0.035) * 1.5;
+    ctx.fillStyle = '#64748b'; // pale human flesh forearm
+    ctx.fillRect(z.x - 12, fallenY - 30 + tremor, 4, 24);
+    ctx.fillRect(z.x + 4, fallenY - 28 - tremor, 4, 22);
 
-    // Right human hand reaching high
-    ctx.fillStyle = '#82a567';
-    ctx.fillRect(z.x + 4, fallenY - 30 - tremor, 6, 24);
-    ctx.fillStyle = '#a3e635';
-    ctx.fillRect(z.x + 2, fallenY - 36 - tremor, 9, 7);
+    // Left hand & frail spread fingers pointing UP
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(z.x - 14, fallenY - 36 + tremor, 7, 6);
     ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(z.x + 2, fallenY - 39 - tremor, 2, 3);
-    ctx.fillRect(z.x + 5, fallenY - 41 - tremor, 2, 5);
-    ctx.fillRect(z.x + 8, fallenY - 40 - tremor, 2, 4);
+    ctx.fillRect(z.x - 14, fallenY - 39 + tremor, 2, 3);
+    ctx.fillRect(z.x - 11, fallenY - 41 + tremor, 2, 5);
+    ctx.fillRect(z.x - 8, fallenY - 39 + tremor, 2, 3);
+
+    // Right hand reaching high
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(z.x + 2, fallenY - 34 - tremor, 7, 6);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(z.x + 2, fallenY - 37 - tremor, 2, 3);
+    ctx.fillRect(z.x + 5, fallenY - 39 - tremor, 2, 5);
+    ctx.fillRect(z.x + 8, fallenY - 37 - tremor, 2, 3);
 
     // Death banner
     ctx.font = 'bold 12px "Tajawal", sans-serif';
@@ -1523,140 +1541,202 @@ function drawTentacleBoss(
     return;
   }
 
-  // ALIVE TENTACLE BOSS RENDERING
-  const walkPhase = (currentTime * 0.003 * z.speed) % (Math.PI * 2);
-  const stompSwing = Math.sin(walkPhase) * 3;
-  const heavyBob = Math.abs(Math.sin(walkPhase)) * 2;
+  // ALIVE TENTACLE BOSS RENDERING - FRAIL EMACIATED SILHOUETTE WITH OCTOPUS TENTACLES
+  const walkPhase = (currentTime * 0.0035 * z.speed) % (Math.PI * 2);
+  const stompSwing = Math.sin(walkPhase) * 2.5;
+  const heavyBob = Math.abs(Math.sin(walkPhase)) * 1.8;
 
-  // 1. LEGS (Thick mutated armored chitin legs)
-  const legTop = z.y + 10;
-  const legH = z.height / 2 - 10;
-  ctx.fillStyle = '#1e1b4b';
-  ctx.fillRect(z.x - 16 - stompSwing, legTop, 14, legH);
-  ctx.fillRect(z.x + 4 + stompSwing, legTop, 14, legH);
-  ctx.fillStyle = '#4338ca'; // sharp knee carapace
-  ctx.fillRect(z.x - 18 - stompSwing, legTop + 6, 6, 6);
-  ctx.fillRect(z.x + 14 + stompSwing, legTop + 6, 6, 6);
+  // 1. LEGS (Skinny, frail, gaunt withered legs with knobby knees)
+  const legTop = z.y + 12;
+  const legH = z.height / 2 - 12;
+  // Left skinny leg (dark tattered hospital trousers)
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(z.x - 10 - stompSwing, legTop, 7, legH);
+  ctx.fillStyle = '#475569'; // bony knee
+  ctx.fillRect(z.x - 11 - stompSwing, legTop + 8, 8, 4);
+  // Right skinny leg
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(z.x + 3 + stompSwing, legTop, 7, legH);
+  ctx.fillStyle = '#64748b'; // bony knee
+  ctx.fillRect(z.x + 2 + stompSwing, legTop + 8, 8, 4);
+  // Bare withered feet
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(z.x - 12 - stompSwing, legTop + legH - 2, 9, 3);
+  ctx.fillRect(z.x + 2 + stompSwing, legTop + legH - 2, 9, 3);
 
-  // 2. CENTRAL INVULNERABLE CHITIN BODY
-  ctx.fillStyle = '#2e1065';
+  // 2. FRAIL HUNCHED TORSO (Visible skeletal ribcage & curved spine)
+  // Dark necrotic torso core
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(z.x - 14, z.y - 14 + heavyBob, 28, 28);
+  // Tattered dark purple research robe
+  ctx.fillStyle = '#3b0764';
+  ctx.fillRect(z.x - 15, z.y - 12 + heavyBob, 5, 26);
+  ctx.fillRect(z.x + 10, z.y - 12 + heavyBob, 5, 26);
+
+  // EXPOSED GAUNT RIBS (Crisp pixel art ribcage)
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(z.x - 9, z.y - 8 + heavyBob, 18, 2);
+  ctx.fillRect(z.x - 8, z.y - 3 + heavyBob, 16, 2);
+  ctx.fillRect(z.x - 7, z.y + 2 + heavyBob, 14, 2);
+  ctx.fillRect(z.x - 6, z.y + 7 + heavyBob, 12, 2);
+  // Central sternum
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(z.x - 1, z.y - 10 + heavyBob, 2, 20);
+
+  // Curved hunched spine notches on back
+  ctx.fillStyle = '#7e22ce';
+  ctx.fillRect(z.x + 13, z.y - 12 + heavyBob, 3, 4);
+  ctx.fillRect(z.x + 14, z.y - 6 + heavyBob, 3, 4);
+  ctx.fillRect(z.x + 13, z.y + 0 + heavyBob, 3, 4);
+
+  // Two frail human arms dangling forward
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(z.x - 18, z.y - 4 + heavyBob, 5, 18);
+  ctx.fillStyle = '#64748b'; // pale elongated fingers
+  ctx.fillRect(z.x - 20, z.y + 12 + heavyBob, 7, 5);
+
+  // 3. SUNKEN SICKLY SKULL (Frail gaunt face with glowing eerie magenta eyes)
+  const headY = zTop + z.headRadius + heavyBob + 2;
+  ctx.fillStyle = '#334155';
   ctx.beginPath();
-  ctx.ellipse(z.x, z.y - 2 + heavyBob, z.width / 2, z.height * 0.42, 0, 0, Math.PI * 2);
+  ctx.arc(z.x, headY, z.headRadius - 2, 0, Math.PI * 2);
   ctx.fill();
-
-  // Spiky chitin plates on back & chest
-  ctx.fillStyle = '#4c1d95';
-  ctx.beginPath();
-  ctx.ellipse(z.x, z.y - 2 + heavyBob, z.width / 2 - 4, z.height * 0.38, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#a855f7';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#581c87';
+  ctx.lineWidth = 1.2;
   ctx.stroke();
 
-  // Two Human Arms attached to torso
-  ctx.fillStyle = '#65824c';
-  ctx.fillRect(z.x - 18, z.y + 6 + heavyBob, 7, 14);
-  ctx.fillRect(z.x + 11, z.y + 6 + heavyBob, 7, 14);
+  // Sunken dark cheek hollows
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(z.x - 8, headY + 2, 4, 4);
+  ctx.fillRect(z.x + 4, headY + 2, 4, 4);
 
-  // Head with demonic glowing eyes
-  const headY = zTop + z.headRadius + heavyBob - 2;
-  ctx.fillStyle = '#1e1b4b';
-  ctx.beginPath();
-  ctx.arc(z.x, headY, z.headRadius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#7c3aed';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  // GLOWING NEON MAGENTA PARASITE EYES
+  ctx.fillStyle = '#ec4899';
+  ctx.fillRect(z.x - 7, headY - 3, 3, 3);
+  ctx.fillRect(z.x + 3, headY - 3, 3, 3);
+  ctx.fillStyle = '#fdf2f8'; // eye glimmer
+  ctx.fillRect(z.x - 6, headY - 2, 1, 1);
+  ctx.fillRect(z.x + 4, headY - 2, 1, 1);
 
-  // Triple glowing magenta eyes
-  ctx.fillStyle = '#f43f5e';
-  ctx.fillRect(z.x - 7, headY - 2, 3, 3);
-  ctx.fillRect(z.x - 1, headY - 4, 3, 3);
-  ctx.fillRect(z.x + 5, headY - 2, 3, 3);
+  // Open screaming necrotic jaw
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(z.x - 4, headY + 6, 8, 4);
+  ctx.fillStyle = '#fef08a'; // yellowed rotten teeth
+  ctx.fillRect(z.x - 3, headY + 6, 2, 2);
+  ctx.fillRect(z.x + 1, headY + 6, 2, 2);
 
-  // 3. THREE DYNAMIC UNDULATING TENTACLES WITH POINTED CLAWS!
+  // 4. THREE GLORIOUS UNDULATING OCTOPUS TENTACLES WITH SUCTION CUPS & SHARP CLAW
+  // "واجعله ضعيف البنية جسدية واجعل له ثلاثة مجسات تظهر من جسمة كانها تشبه مجسات الاخطبوط وجعل مظهره بيكسل ارت جميل"
   if (z.tentacles) {
+    const tentacleYOffsets = [-22, 0, 22];
     z.tentacles.forEach((tentacle, idx) => {
-      const rootX = z.x - 16;
-      const rootY = z.y + (tentacle.currentYOffset ?? 0) + heavyBob;
+      const rootX = z.x - 14;
+      const rootY = z.y + tentacleYOffsets[idx] + heavyBob;
 
       if (tentacle.isSevered) {
-        // Bloody severed stump
-        ctx.fillStyle = '#881337';
+        // Bloody severed octopus stump
+        ctx.fillStyle = '#4a044e';
         ctx.fillRect(rootX - 4, rootY - 6, 8, 12);
+        ctx.fillStyle = '#831843';
+        ctx.fillRect(rootX - 6, rootY - 4, 4, 8);
         ctx.fillStyle = '#dc2626';
-        ctx.fillRect(rootX - 6, rootY - 4, 5, 8);
+        ctx.fillRect(rootX - 5, rootY - 3, 3, 6);
 
         // If currently in the 4-second bleeding period, spew high-pressure arterial fountains!
         if (tentacle.severBleedTimer && tentacle.severBleedTimer > 0) {
           ctx.fillStyle = '#ef4444';
-          const spurtLen = 20 + Math.sin(currentTime * 0.04 + idx) * 12;
+          const spurtLen = 22 + Math.sin(currentTime * 0.04 + idx) * 14;
           ctx.fillRect(rootX - 6 - spurtLen, rootY - 3, spurtLen, 6);
+          // Dripping blood drops
+          ctx.fillStyle = '#b91c1c';
+          ctx.fillRect(rootX - 10 - (currentTime % 20), rootY + 4, 3, 3);
         }
         return;
       }
 
-      // Alive Tentacle: Undulates in wave toward the player
-      const wave = Math.sin(currentTime * 0.006 + tentacle.wavePhase + idx) * 14;
-      const wave2 = Math.cos(currentTime * 0.007 + tentacle.wavePhase) * 10;
-      const tipX = z.x - 85;
+      // Active undulating Octopus Tentacle
+      const wave = Math.sin(currentTime * 0.0055 + tentacle.wavePhase + idx * 1.5) * 16;
+      const waveMid = Math.cos(currentTime * 0.006 + tentacle.wavePhase) * 12;
+      const tipX = z.x - 90;
       const tipY = rootY + wave;
-      const midX = z.x - 45;
-      const midY = rootY + wave2;
+      const midX = z.x - 48;
+      const midY = rootY + waveMid;
 
-      // Draw undulating tentacle body segments
-      ctx.strokeStyle = idx === 1 ? '#9333ea' : '#7e22ce';
-      ctx.lineWidth = 14;
+      // Outer muscular octopus tentacle body (Deep royal violet)
+      ctx.strokeStyle = idx === 1 ? '#701a75' : '#581c87';
+      ctx.lineWidth = 15;
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(rootX, rootY);
       ctx.quadraticCurveTo(midX, midY, tipX, tipY);
       ctx.stroke();
 
-      // Inner luminous sucker nodes
-      ctx.strokeStyle = '#e879f9';
-      ctx.lineWidth = 4;
+      // Inner fleshy ridge (Vibrant magenta)
+      ctx.strokeStyle = idx === 1 ? '#c026d3' : '#a21caf';
+      ctx.lineWidth = 9;
       ctx.beginPath();
       ctx.moveTo(rootX, rootY);
       ctx.quadraticCurveTo(midX, midY, tipX, tipY);
       ctx.stroke();
 
-      // POINTED SHARP CLAW AT THE TIP OF TENTACLE ("وتكون نهاية مجساته مخلب مدبب")
+      // DISTINCT OCTOPUS SUCTION CUPS (ممصات الأخطبوط بيكسل آرت)
+      // Render 5 suction cups along the tentacle curve
+      for (let s = 1; s <= 5; s++) {
+        const t = s / 6;
+        // Bezier formula: (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+        const sX = (1 - t) * (1 - t) * rootX + 2 * (1 - t) * t * midX + t * t * tipX;
+        const sY = (1 - t) * (1 - t) * rootY + 2 * (1 - t) * t * midY + t * t * tipY;
+
+        // Outer suction cup ring (Pink fleshy rim)
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(sX, sY - 5, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner suction cup hole (Deep dark red crater)
+        ctx.fillStyle = '#831843';
+        ctx.beginPath();
+        ctx.arc(sX, sY - 5, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // POINTED SHARP CLAW AT THE END OF THE TENTACLE ("وتكون نهاية مجساته مخلب مدبب")
       ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.moveTo(tipX, tipY - 5);
-      ctx.lineTo(tipX - 16, tipY);
-      ctx.lineTo(tipX, tipY + 5);
+      ctx.moveTo(tipX, tipY - 6);
+      ctx.lineTo(tipX - 18, tipY);
+      ctx.lineTo(tipX, tipY + 6);
       ctx.closePath();
       ctx.fill();
+      // Sharp blood-stained claw edge
       ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(tipX, tipY - 5);
-      ctx.lineTo(tipX - 16, tipY);
-      ctx.lineTo(tipX, tipY + 5);
+      ctx.moveTo(tipX, tipY - 6);
+      ctx.lineTo(tipX - 18, tipY);
+      ctx.lineTo(tipX, tipY + 6);
       ctx.stroke();
 
       // Mini Health Bar above each active tentacle (3000 HP)
       const tBarW = 44;
       const tRatio = Math.max(0, tentacle.hp / tentacle.maxHp);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillRect(midX - tBarW / 2, midY - 14, tBarW, 5);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fillRect(midX - tBarW / 2, midY - 16, tBarW, 5);
       ctx.fillStyle = '#c084fc';
-      ctx.fillRect(midX - tBarW / 2, midY - 14, tBarW * tRatio, 5);
+      ctx.fillRect(midX - tBarW / 2, midY - 16, tBarW * tRatio, 5);
       ctx.strokeStyle = '#e879f9';
       ctx.lineWidth = 0.8;
-      ctx.strokeRect(midX - tBarW / 2, midY - 14, tBarW, 5);
+      ctx.strokeRect(midX - tBarW / 2, midY - 16, tBarW, 5);
 
       ctx.font = 'bold 8px "Tajawal", sans-serif';
       ctx.fillStyle = '#fef08a';
       ctx.textAlign = 'center';
-      ctx.fillText(`${Math.max(0, tentacle.hp)}`, midX, midY - 16);
+      ctx.fillText(`${Math.max(0, tentacle.hp)}`, midX, midY - 18);
     });
   }
 
-  // 4. GRAND GILDED TENTACLE BOSS BANNER & STATUS
-  const bWidth = 110;
+  // 5. GRAND TENTACLE BOSS BANNER & STATUS
+  const bWidth = 120;
   const remainingTentacles = Math.max(0, 3 - (z.tentaclesSeveredCount || 0));
   ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
   ctx.fillRect(z.x - bWidth / 2, zTop - 28, bWidth, 9);
@@ -1676,6 +1756,96 @@ function drawTentacleBoss(
     z.x, 
     zTop - 32
   );
+
+  ctx.restore();
+}
+
+// 7. NEW ZOMBIE: "نيكرو باس" (NECRO PASS) - 2 TENTACLES ON BACK, 4 DAMAGE EVERY 3 SECONDS
+// "اجعل نوع واحد من زومبي يظهر مع زعيم ويكون اسمه نيكرو باس يكون هذا نوع من زومبي جديد يمتلك مجسين يظهران من خلف ظهره يدمج حصن لو كان بقرب منه جدا يكون دمجه. 4 كل 3ثواني"
+function drawNecroPassZombie(
+  ctx: CanvasRenderingContext2D,
+  z: ZombieEntity,
+  currentTime: number
+) {
+  ctx.save();
+  const zTop = z.y - z.height / 2;
+
+  // Ground shadow
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.beginPath();
+  ctx.ellipse(z.x, z.y + z.height / 2 + 2, 16, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const walkPhase = (currentTime * 0.005) % (Math.PI * 2);
+  const legSwing = Math.sin(walkPhase) * 5;
+  const bobY = Math.abs(Math.sin(walkPhase)) * 2;
+
+  // 1. LEGS (Tattered supermarket trousers)
+  const legH = 22;
+  const legY = z.y + 6;
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(z.x - 7 - legSwing, legY, 6, legH);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(z.x + 1 + legSwing, legY, 6, legH);
+
+  // 2. TORSO (Mutated rotten infected torso with parasite veins)
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(z.x - 9, z.y - 14 + bobY, 18, 22);
+  // Parasite purple chest infestation
+  ctx.fillStyle = '#581c87';
+  ctx.fillRect(z.x - 5, z.y - 10 + bobY, 10, 14);
+  ctx.fillStyle = '#c084fc';
+  ctx.fillRect(z.x - 3, z.y - 8 + bobY, 6, 8);
+
+  // 3. TWO OCTOPUS TENTACLES SPROUTING FROM BEHIND HIS BACK!
+  // "يمتلك مجسين يظهران من خلف ظهره"
+  const tentWave1 = Math.sin(currentTime * 0.007) * 10;
+  const tentWave2 = Math.cos(currentTime * 0.0065) * 10;
+
+  // Upper back tentacle
+  ctx.strokeStyle = '#7e22ce';
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(z.x - 4, z.y - 8 + bobY);
+  ctx.quadraticCurveTo(z.x - 24, z.y - 28 + tentWave1, z.x - 42, z.y - 14 + tentWave1);
+  ctx.stroke();
+
+  // Suction dots on upper tentacle
+  ctx.fillStyle = '#f472b6';
+  ctx.fillRect(z.x - 18, z.y - 24 + tentWave1, 3, 3);
+  ctx.fillRect(z.x - 32, z.y - 20 + tentWave1, 3, 3);
+
+  // Lower back tentacle
+  ctx.strokeStyle = '#9333ea';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(z.x - 4, z.y + 2 + bobY);
+  ctx.quadraticCurveTo(z.x - 22, z.y + 18 + tentWave2, z.x - 40, z.y + 6 + tentWave2);
+  ctx.stroke();
+
+  // Suction dots on lower tentacle
+  ctx.fillStyle = '#f472b6';
+  ctx.fillRect(z.x - 18, z.y + 14 + tentWave2, 3, 3);
+  ctx.fillRect(z.x - 30, z.y + 10 + tentWave2, 3, 3);
+
+  // 4. HEAD (Infected skull with purple glowing parasite eyes)
+  const headY = zTop + z.headRadius + bobY;
+  ctx.fillStyle = '#475569';
+  ctx.beginPath();
+  ctx.arc(z.x, headY, z.headRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing parasite eyes
+  ctx.fillStyle = '#c084fc';
+  ctx.fillRect(z.x - 6, headY - 2, 3, 3);
+  ctx.fillRect(z.x + 2, headY - 2, 3, 3);
+
+  // Name banner
+  ctx.font = 'bold 9px "Tajawal", sans-serif';
+  ctx.fillStyle = '#d8b4fe';
+  ctx.textAlign = 'center';
+  ctx.fillText('نيكرو باس', z.x, zTop - 8);
 
   ctx.restore();
 }
@@ -1714,25 +1884,39 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Exact zombie counts + Survivor Scaling:
-  // Day 1 = 35 zombies ("اول يوم يهجم فقط 35 واحد")
-  // Day 2 = 45 zombies ("في يوم ثاني 45")
-  // Day 3 = 58 zombies with Glutton Boss (No survivor bonus on boss nights)
-  // Day 4 = 65 zombies with Spitter ("اجعل ليلة رابعة 65 واحد واضف زومبي الباصق")
-  // Day 5+ = 65 + (day - 4) * 12
-  // Survivor recruitment scaling:
-  // "وايضا عندما يحصل لاعب على ناجي يزدد عدد زومبي 50 زومبي في جميع اليلي ماعدا ليلي التي بها زعماء واذا حصل لاعب على ناجي ثاني سيزداد عدد زومبي" (+100 for second survivor, total +150)
+  // Exact zombie quotas per night requested by player:
+  // Day 1 = 45 zombies
+  // Day 2 = 45 zombies
+  // Day 3 = 58 zombies with Glutton Boss
+  // Day 4 = 78 zombies ("اجعل ليلة رابعة 78 زومبي يجب قتلهم حتى تنتهي ليلة")
+  // Day 5 = 86 zombies ("واجعل ليلة الخامسة 86زومبي يجب قتلهم حتى تنتهي ليلة")
+  // Day 6 = 60 zombies with 3-Tentacle Boss
+  // Day 7 = 115 zombies ("واجعل ليلة سابعة 115 زومبي يجب قتلهم")
+  // Day 8 = 127 zombies ("وليلة ثامنة 127 زومبي يجب قتلهم")
+  // Day 9 = 139 zombies ("وليلة تاسعة 139زومبي يجب قتلهم")
+  // Day 10+ = 139 + (day - 9) * 12
   const recruitedCount = survivors.filter(s => s.isRecruited && !s.isDead).length;
   const isBossNight = day === 3 || day === 6;
   const survivorBonus = isBossNight ? 0 : (recruitedCount === 1 ? 50 : recruitedCount >= 2 ? 150 : 0);
   const baseZombies = day === 1 
-    ? 35 
+    ? 45 
     : day === 2 
     ? 45 
     : day === 3 
     ? 58 
     : day === 4 
-    ? 65 
-    : 65 + (day - 4) * 12;
+    ? 78 
+    : day === 5 
+    ? 86 
+    : day === 6 
+    ? 60 
+    : day === 7 
+    ? 115 
+    : day === 8 
+    ? 127 
+    : day === 9 
+    ? 139 
+    : 139 + (day - 9) * 12;
   const totalZombiesForNight = baseZombies + survivorBonus;
   const zombiesPerWaveCount = Math.ceil(totalZombiesForNight / 4);
 
@@ -1824,7 +2008,9 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
     headshots: 0,
     barricadeDamageTaken: 0,
     wave: 1,
-    batchWaveStep: 1, // 1: initial 20 batch, 2: 25 batch, 3: 35 batch, 4+: 35 batch
+    batchWaveStep: 1,
+    batchWaveIndex: 0,
+    lastBatchSpawnTime: 0,
     zombiesSpawnedInWave: 0,
     zombiesPerWave: zombiesPerWaveCount,
     isWaitingNextWave: false,
@@ -1841,7 +2027,8 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
     isEnded: false,
     pkcReloaderId: null as string | null,
     pkcReloadTimeLeft: 0,
-    pkcReloadTotalTime: 90
+    pkcReloadTotalTime: 90,
+    lastNecroPassWipeTime: 0
   });
 
   // Load Supermarket Barricade Background Image
@@ -2352,9 +2539,17 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         // When target zombie dies, damage resets back to 2 for the next target!
         // "وعندما يموت زومبي الذي تم تسليط عليه شعاع بلازما فيعود ضرر البلازما الى 2 ويصعد الى ان يصل الى 6 وهكذا"
         if (target.hp <= 0 && !target.isDead) {
-          target.isDead = true;
-          target.deathAnimTimer = 25;
-          g.zombiesKilled++;
+          if (target.isBoss) {
+            if (!target.isDying) {
+              target.isDying = true;
+              target.speed = 0;
+              target.deathAnimTimer = 85;
+            }
+          } else {
+            target.isDead = true;
+            target.deathAnimTimer = 25;
+            g.zombiesKilled++;
+          }
           g.plasmaTargetZombieId = null;
           g.plasmaCurrentDamage = 2;
           g.plasmaFocusStartTime = currentTime;
@@ -2372,44 +2567,51 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
     if (weapon.category === 'shotgun') {
       audio.playShotgun();
       setScreenShake(6);
-    } else if (weapon.id === 'revolver') {
-      audio.playRevolver();
-      setScreenShake(4.5);
-    } else if (weapon.id === 'uzi') {
+    } else if (weapon.id === 'nail_gun') {
+      audio.playMechanicalClick();
+      setScreenShake(2.2);
+    } else if (weapon.id === 'mp40') {
       audio.playUzi();
-      setScreenShake(1.8);
-    } else if (weapon.id === 'hunting_rifle') {
-      audio.playSniper();
-      setScreenShake(7);
+      setScreenShake(1.9);
+    } else if (weapon.id === 'pkc') {
+      audio.playRifle();
+      setScreenShake(3.5);
     } else if (weapon.category === 'melee') {
       audio.playMeleeSwing();
       setScreenShake(1.5);
-    } else if (weapon.category === 'pistol') {
+    } else {
       audio.playPistol();
       setScreenShake(2);
-    } else {
-      audio.playRifle();
-      setScreenShake(2.5);
     }
 
     const startX = 180;
     const startY = g.playerY;
     const angle = Math.atan2(g.mouseY - startY, g.mouseX - startX);
 
+    const isNailGun = weapon.id === 'nail_gun';
+    // For nail gun: both nails travel on the exact same trajectory line, one directly behind the other (tandem)
+    const nailAngle = angle + (Math.random() - 0.5) * weapon.spread;
+    const nailSpeed = 29;
+
     for (let p = 0; p < weapon.pellets; p++) {
-      const spreadOffset = (Math.random() - 0.5) * weapon.spread;
-      const finalAngle = angle + spreadOffset;
-      const speed = 28 + Math.random() * 4;
+      const finalAngle = isNailGun ? nailAngle : angle + (Math.random() - 0.5) * weapon.spread;
+      const speed = isNailGun ? nailSpeed : (28 + Math.random() * 4);
+
+      // Spacing: the two nails are in tandem along the line of fire (nail 0 leads, nail 1 follows directly behind by 24px)
+      const distBehind = isNailGun ? p * 24 : 0;
+      const spawnX = startX - Math.cos(finalAngle) * distBehind;
+      const spawnY = startY - Math.sin(finalAngle) * distBehind;
 
       g.bullets.push({
         id: Math.random(),
-        x: startX,
-        y: startY,
+        x: spawnX,
+        y: spawnY,
         vx: Math.cos(finalAngle) * speed,
         vy: Math.sin(finalAngle) * speed,
         damage: weapon.damage,
         isHeadshotCapable: true,
         isPlayerBullet: true,
+        isNail: isNailGun,
         life: 50
       });
     }
@@ -2584,33 +2786,41 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
     let animId: number;
     let lastTime = performance.now();
 
-    // Spawn a standard zombie, FAT ZOMBIE, or RUNNER
-    // Day 1: ONLY Normal Zombie and Fat Zombie, with Fat Zombie being rare ("في اليوم الاول قلل عدد زومبي السمين لا تجعله يظهر كثيرا فقط اليوم الاول")
-    // Day 2: Normal Zombie, Fat Zombie, AND Fast Runner ("وثانية تكون زومبي سمين وعادي وسريع ايضا")
-    const spawnSingleZombie = () => {
+    // Spawn a standard zombie, FAT ZOMBIE, RUNNER, or SPITTER
+    const spawnSingleZombie = (typeOverride?: ZombieType, customY?: number, customX?: number) => {
       const g = gameStateRef.current;
       if (g.zombiesSpawned >= g.totalZombiesToSpawn) return;
 
       let chosenType: ZombieType;
-      if (day === 1) {
-        // Day 1: ONLY Normal Zombie and Fat Zombie, but Fat Zombie is rare (~12% chance)
-        chosenType = Math.random() < 0.12 ? 'fat_zombie' : 'shopper';
-      } else if (day === 2) {
-        // Day 2: Normal Zombie, Fat Zombie, AND Fast Runner
-        const rand = Math.random();
-        chosenType = rand < 0.45 ? 'shopper' : rand < 0.75 ? 'runner' : 'fat_zombie';
-      } else if (day === 3) {
-        // Day 3: Normal Zombie, Fat Zombie, Runner
-        const types: ZombieType[] = ['shopper', 'fat_zombie', 'runner'];
-        chosenType = types[Math.floor(Math.random() * types.length)];
-      } else if (day === 4) {
-        // Day 4: Spitter zombie debuts!
-        const types: ZombieType[] = ['shopper', 'fat_zombie', 'runner', 'spitter'];
-        chosenType = types[Math.floor(Math.random() * types.length)];
+      if (typeOverride) {
+        chosenType = typeOverride;
+        // Enforce day restrictions even if formation specifies an advanced zombie:
+        if (day === 1 && (chosenType === 'runner' || chosenType === 'spitter')) {
+          chosenType = 'shopper';
+        } else if ((day === 2 || day === 3) && chosenType === 'spitter') {
+          chosenType = 'runner';
+        }
       } else {
-        // Day 5+: Armored Zombie debuts! Only dies by headshots! ("وجعل في يوم خامس يظهر زومبي جديد يكون مدرع ولا يموت الا براسه")
-        const rand = Math.random();
-        chosenType = rand < 0.32 ? 'armored' : rand < 0.52 ? 'spitter' : rand < 0.72 ? 'runner' : rand < 0.88 ? 'fat_zombie' : 'shopper';
+        if (day === 1) {
+          // Day 1: ONLY Normal Zombie and Fat Zombie, but Fat Zombie is rare (~12% chance)
+          chosenType = Math.random() < 0.12 ? 'fat_zombie' : 'shopper';
+        } else if (day === 2) {
+          // Day 2: Normal Zombie, Fat Zombie, AND Fast Runner
+          const rand = Math.random();
+          chosenType = rand < 0.45 ? 'shopper' : rand < 0.75 ? 'runner' : 'fat_zombie';
+        } else if (day === 3) {
+          // Day 3: Normal Zombie, Fat Zombie, Runner
+          const types: ZombieType[] = ['shopper', 'fat_zombie', 'runner'];
+          chosenType = types[Math.floor(Math.random() * types.length)];
+        } else if (day === 4) {
+          // Day 4: Spitter zombie debuts!
+          const types: ZombieType[] = ['shopper', 'fat_zombie', 'runner', 'spitter'];
+          chosenType = types[Math.floor(Math.random() * types.length)];
+        } else {
+          // Day 5+: Spitter, Runner, Fat Zombie, and Shopper (Armored zombie removed as requested)
+          const rand = Math.random();
+          chosenType = rand < 0.35 ? 'spitter' : rand < 0.65 ? 'runner' : rand < 0.85 ? 'fat_zombie' : 'shopper';
+        }
       }
       let hp = 50 + day * 10;
       let speed = 0.9 + Math.random() * 0.3;
@@ -2630,7 +2840,7 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         color = '#ea580c';
         headRadius = 9;
       } else if (chosenType === 'fat_zombie') {
-        // FAT ZOMBIE: High health, chubby round belly ("زومبي سمين يحتاج الى عده طلقات لكي يموت اي دمه اعلى")
+        // FAT ZOMBIE: High health, chubby round belly
         hp = 135 + day * 20;
         speed = 0.62;
         damage = 14 + day * 2;
@@ -2646,15 +2856,6 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         height = 70;
         color = '#a855f7';
         headRadius = 14;
-      } else if (chosenType === 'armored') {
-        // ARMORED ZOMBIE: Day 5+ with ballistic SWAT armor, only headshots deal damage!
-        hp = 180 + day * 25;
-        speed = 0.72;
-        damage = 18 + day * 2;
-        width = 34;
-        height = 60;
-        color = '#475569';
-        headRadius = 11;
       } else if (chosenType === 'spitter') {
         // SPITTER ZOMBIE: Night 4+
         hp = 68 + day * 12;
@@ -2666,11 +2867,14 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         headRadius = 10;
       }
 
+      const spawnX = customX !== undefined ? customX : (1020 + Math.random() * 60);
+      const spawnY = customY !== undefined ? customY : (140 + Math.random() * 320);
+
       g.zombies.push({
         id: Date.now() + Math.random(),
         type: chosenType,
-        x: 1020 + Math.random() * 60,
-        y: 140 + Math.random() * 320,
+        x: spawnX,
+        y: spawnY,
         hp,
         maxHp: hp,
         speed,
@@ -2691,6 +2895,185 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
 
       g.zombiesSpawned++;
       g.zombiesSpawnedInWave++;
+    };
+
+    interface FormationSlot {
+      type: ZombieType;
+      y: number;
+      xOffset: number;
+    }
+
+    // 5 Structured tactical formations for batches of 20 zombies on regular nights (zero lag + organized battlelines):
+    const FORMATIONS: FormationSlot[][] = [
+      // Formation 0: User requested formation (5 Fat Zombies center, 8 Shoppers top, 6 Fast Runners bottom, 1 Spitter rear commander)
+      [
+        // Top Lane: 8 Normal shoppers
+        { type: 'shopper', y: 135, xOffset: 20 },
+        { type: 'shopper', y: 148, xOffset: 55 },
+        { type: 'shopper', y: 162, xOffset: 10 },
+        { type: 'shopper', y: 175, xOffset: 45 },
+        { type: 'shopper', y: 188, xOffset: 25 },
+        { type: 'shopper', y: 202, xOffset: 60 },
+        { type: 'shopper', y: 215, xOffset: 15 },
+        { type: 'shopper', y: 228, xOffset: 50 },
+
+        // Center Lane: 5 Fat Zombies
+        { type: 'fat_zombie', y: 275, xOffset: 0 },
+        { type: 'fat_zombie', y: 292, xOffset: 28 },
+        { type: 'fat_zombie', y: 310, xOffset: 5 },
+        { type: 'fat_zombie', y: 328, xOffset: 32 },
+        { type: 'fat_zombie', y: 345, xOffset: 10 },
+
+        // Bottom Lane: 6 Fast Runners
+        { type: 'runner', y: 380, xOffset: 0 },
+        { type: 'runner', y: 397, xOffset: 30 },
+        { type: 'runner', y: 414, xOffset: 10 },
+        { type: 'runner', y: 431, xOffset: 40 },
+        { type: 'runner', y: 448, xOffset: 20 },
+        { type: 'runner', y: 465, xOffset: 50 },
+
+        // Rear center: 1 Spitter
+        { type: 'spitter', y: 310, xOffset: 110 }
+      ],
+
+      // Formation 1: Double Pincer Attack (7 Runners top flank, 7 Runners bottom flank, 4 Fat Zombies center anchor, 2 Spitters rear)
+      [
+        // Top Flank Runners (7)
+        { type: 'runner', y: 135, xOffset: 0 },
+        { type: 'runner', y: 148, xOffset: 25 },
+        { type: 'runner', y: 162, xOffset: 50 },
+        { type: 'runner', y: 175, xOffset: 15 },
+        { type: 'runner', y: 188, xOffset: 40 },
+        { type: 'runner', y: 202, xOffset: 65 },
+        { type: 'runner', y: 215, xOffset: 30 },
+
+        // Bottom Flank Runners (7)
+        { type: 'runner', y: 385, xOffset: 0 },
+        { type: 'runner', y: 398, xOffset: 25 },
+        { type: 'runner', y: 412, xOffset: 50 },
+        { type: 'runner', y: 425, xOffset: 15 },
+        { type: 'runner', y: 438, xOffset: 40 },
+        { type: 'runner', y: 452, xOffset: 65 },
+        { type: 'runner', y: 465, xOffset: 30 },
+
+        // Center Wall (4 Fat Zombies)
+        { type: 'fat_zombie', y: 275, xOffset: 10 },
+        { type: 'fat_zombie', y: 295, xOffset: 35 },
+        { type: 'fat_zombie', y: 315, xOffset: 10 },
+        { type: 'fat_zombie', y: 335, xOffset: 35 },
+
+        // Rear Spitters (2)
+        { type: 'spitter', y: 290, xOffset: 95 },
+        { type: 'spitter', y: 320, xOffset: 105 }
+      ],
+
+      // Formation 2: Tactical Spearhead / V-Wedge (3 Fat Tip, 6 Shoppers upper wing, 6 Runners lower wing, 3 Spitters core, 2 Trailing Shoppers)
+      [
+        // Spearhead Lead (3 Fat Zombies)
+        { type: 'fat_zombie', y: 305, xOffset: 0 },
+        { type: 'fat_zombie', y: 280, xOffset: 30 },
+        { type: 'fat_zombie', y: 330, xOffset: 30 },
+
+        // Upper Wing (6 Shoppers)
+        { type: 'shopper', y: 255, xOffset: 50 },
+        { type: 'shopper', y: 230, xOffset: 70 },
+        { type: 'shopper', y: 205, xOffset: 90 },
+        { type: 'shopper', y: 180, xOffset: 110 },
+        { type: 'shopper', y: 155, xOffset: 130 },
+        { type: 'shopper', y: 135, xOffset: 150 },
+
+        // Lower Wing (6 Runners)
+        { type: 'runner', y: 355, xOffset: 50 },
+        { type: 'runner', y: 380, xOffset: 70 },
+        { type: 'runner', y: 405, xOffset: 90 },
+        { type: 'runner', y: 430, xOffset: 110 },
+        { type: 'runner', y: 450, xOffset: 130 },
+        { type: 'runner', y: 465, xOffset: 150 },
+
+        // Core Spitters (3)
+        { type: 'spitter', y: 285, xOffset: 85 },
+        { type: 'spitter', y: 305, xOffset: 105 },
+        { type: 'spitter', y: 325, xOffset: 85 },
+
+        // Rear Guard (2 Shoppers)
+        { type: 'shopper', y: 265, xOffset: 145 },
+        { type: 'shopper', y: 345, xOffset: 145 }
+      ],
+
+      // Formation 3: Three Aisle Columns (6 top aisle, 8 center aisle, 6 bottom aisle)
+      [
+        // Top Aisle (6: 2 fat in front, 4 normal behind)
+        { type: 'fat_zombie', y: 165, xOffset: 0 },
+        { type: 'fat_zombie', y: 195, xOffset: 10 },
+        { type: 'shopper', y: 150, xOffset: 40 },
+        { type: 'shopper', y: 175, xOffset: 55 },
+        { type: 'shopper', y: 195, xOffset: 80 },
+        { type: 'shopper', y: 215, xOffset: 95 },
+
+        // Center Aisle (8: 3 fat in front, 3 normal midline, 2 spitters behind)
+        { type: 'fat_zombie', y: 275, xOffset: 0 },
+        { type: 'fat_zombie', y: 305, xOffset: 15 },
+        { type: 'fat_zombie', y: 335, xOffset: 0 },
+        { type: 'shopper', y: 280, xOffset: 50 },
+        { type: 'shopper', y: 305, xOffset: 65 },
+        { type: 'shopper', y: 330, xOffset: 50 },
+        { type: 'spitter', y: 290, xOffset: 105 },
+        { type: 'spitter', y: 320, xOffset: 115 },
+
+        // Bottom Aisle (6: 2 fat in front, 4 runners behind)
+        { type: 'fat_zombie', y: 400, xOffset: 0 },
+        { type: 'fat_zombie', y: 430, xOffset: 10 },
+        { type: 'runner', y: 385, xOffset: 40 },
+        { type: 'runner', y: 410, xOffset: 55 },
+        { type: 'runner', y: 435, xOffset: 80 },
+        { type: 'runner', y: 455, xOffset: 95 }
+      ],
+
+      // Formation 4: Full-Grid Staggered Battlelines (5 fat front wall, 7 normal mid, 6 runners rear, 2 spitters artillery)
+      [
+        // Front wall (5 Fat Zombies)
+        { type: 'fat_zombie', y: 145, xOffset: 0 },
+        { type: 'fat_zombie', y: 220, xOffset: 15 },
+        { type: 'fat_zombie', y: 300, xOffset: 0 },
+        { type: 'fat_zombie', y: 380, xOffset: 15 },
+        { type: 'fat_zombie', y: 455, xOffset: 0 },
+
+        // Midline (7 Normal Shoppers)
+        { type: 'shopper', y: 165, xOffset: 40 },
+        { type: 'shopper', y: 210, xOffset: 55 },
+        { type: 'shopper', y: 260, xOffset: 45 },
+        { type: 'shopper', y: 305, xOffset: 60 },
+        { type: 'shopper', y: 350, xOffset: 45 },
+        { type: 'shopper', y: 400, xOffset: 55 },
+        { type: 'shopper', y: 445, xOffset: 40 },
+
+        // Runners (6)
+        { type: 'runner', y: 150, xOffset: 85 },
+        { type: 'runner', y: 200, xOffset: 95 },
+        { type: 'runner', y: 275, xOffset: 90 },
+        { type: 'runner', y: 330, xOffset: 90 },
+        { type: 'runner', y: 410, xOffset: 95 },
+        { type: 'runner', y: 460, xOffset: 85 },
+
+        // Artillery (2 Spitters)
+        { type: 'spitter', y: 285, xOffset: 130 },
+        { type: 'spitter', y: 325, xOffset: 130 }
+      ]
+    ];
+
+    const spawnFormationBatch = (batchIdx: number, countToSpawn: number) => {
+      const g = gameStateRef.current;
+      const formation = FORMATIONS[batchIdx % FORMATIONS.length];
+      const count = Math.min(countToSpawn, formation.length);
+      const baseX = 990;
+
+      for (let i = 0; i < count; i++) {
+        if (g.zombiesSpawned >= g.totalZombiesToSpawn) break;
+        const slot = formation[i];
+        const spawnX = baseX + slot.xOffset;
+        const spawnY = slot.y;
+        spawnSingleZombie(slot.type, spawnY, spawnX);
+      }
     };
 
     // Spawn Trio Pack of Runners
@@ -2774,8 +3157,45 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
       });
     };
 
+    // Spawn 3 "Necro Pass" zombies (The ONLY zombie type on Night 6 that spawns with 3-Tentacle Boss)
+    // "اجعل نوع واحد من زومبي يظهر مع زعيم ويكون اسمه نيكرو باس يكون هذا نوع من زومبي جديد يمتلك مجسين يظهران من خلف ظهره يدمج حصن لو كان بقرب منه جدا يكون دمجه. 4 كل 3ثواني هذا نوع من زومبي يظهر مع زعيم مجسات يكون عدد ثلاثة ويظهرون معه كل ست ثواني بشرط ان يمتوا ثلاثتهم"
+    const spawnNecroPassTrio = () => {
+      const g = gameStateRef.current;
+      const lanes = [
+        { y: 190, xOffset: 0 },
+        { y: 310, xOffset: 45 },
+        { y: 430, xOffset: 15 }
+      ];
+
+      lanes.forEach((lane, idx) => {
+        g.zombies.push({
+          id: Date.now() + idx + Math.random(),
+          type: 'necro_pass',
+          x: 1040 + lane.xOffset + Math.random() * 20,
+          y: lane.y,
+          hp: 200,
+          maxHp: 200,
+          speed: 0.82,
+          damage: 4, // 4 damage
+          attackCooldown: 3000, // Every 3 seconds (3000ms)
+          lastAttackTime: 0,
+          width: 30,
+          height: 56,
+          isDead: false,
+          deathAnimTimer: 0,
+          color: '#7e22ce',
+          headRadius: 10,
+          stepsTaken: 0,
+          hasSpit: false,
+          isBurning: false,
+          burnTimer: 0
+        });
+      });
+      audio.playZombieGroan(1.1);
+    };
+
     // Spawn 3-Tentacle Boss Zombie (Night 6 Special Boss)
-    // "ويوم سادس يظهر زعيم زومبي له ثلاث مجسات لا يموت الا بقطع مجساته ثلاثة وكل مجس له 3000 نقطة دم زعيم مجسات لا يتاثر بطلقات النار الا اذا كانت على مجساته وتكون نهاية مجساته مخلب مدبب وايضا عندما يصل صحة مجساته الى صفر تسقط ويخرج منه دماء لمدة اربع ثواني ويتالم ويصبح اسرع قليلا وعندما يفقد ثلاثة مجساته اجعل له انيمشن يسقط على الارض على ضهره ويرفع يديه لبشريتين فوق وثم تنتهي ليلة"
+    // "زعيم ثاني الذي يظهر في ليلة سادسة الذي اسمه زعيم المجسات مظهره سيى جدا ولماذا تجعل معه الكثير من زومبي قم بتغير مظهره واجعله ضعيف البنية جسدية واجعل له ثلاثة مجسات تظهر من جسمة كانها تشبه مجسات الاخطبوط وجعل مظهره بيكسل ارت جميل"
     const spawnTentacleBoss = () => {
       const g = gameStateRef.current;
       if (g.bossSpawned) return;
@@ -2816,7 +3236,7 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
         id: Math.random(),
         x: 650,
         y: 190,
-        text: language === 'ar' ? '☠️ ظهر زعيم المجسات الثلاثة (اقطع مجساته لتنتصر)!' : '☠️ 3-TENTACLE BOSS RISEN! (Sever all 3 tentacles!)',
+        text: language === 'ar' ? '☠️ ظهر زعيم المجسات الضعيف (اقطع مجساته لتنتصر)!' : '☠️ 3-TENTACLE BOSS RISEN! (Sever all 3 tentacles!)',
         color: '#c084fc',
         life: 85,
         maxLife: 85
@@ -2839,63 +3259,52 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
 
       // Wave Spawning: Day 3 (Glutton Boss), Day 6 (3-Tentacle Boss), and Regular Nights
       if (day === 6) {
-        // Day 6: 3-Tentacle Boss Night!
-        const livingZombies = g.zombies.filter(z => !z.isDead && !z.isDying).length;
-        const remainingToSpawn = g.totalZombiesToSpawn - g.zombiesSpawned;
-
-        if (g.batchWaveStep === 1) {
-          const count = Math.min(12, remainingToSpawn);
-          for (let b = 0; b < count; b++) {
-            spawnSingleZombie();
-          }
-          if (count > 0) audio.playZombieGroan(1.15);
-          g.batchWaveStep = 2;
-        } else if (g.batchWaveStep === 2 && !g.bossSpawned) {
+        // Day 6: ONLY 3-Tentacle Boss + 3 Necro Pass zombies!
+        // "وايضا في يوم سادس الذي يظهر فيها زعيم المجسات اجعل نوع واحد من زومبي يظهر مع زعيم ويكون اسمه نيكرو باس يكون هذا نوع من زومبي جديد يمتلك مجسين يظهران من خلف ظهره يدمج حصن لو كان بقرب منه جدا يكون دمجه. 4 كل 3ثواني هذا نوع من زومبي يظهر مع زعيم مجسات يكون عدد ثلاثة ويظهرون معه كل ست ثواني بشرط ان يمتوا ثلاثتهم وايضا عند موت زعيم مجسات تنتهي ليلة"
+        if (!g.bossSpawned) {
           spawnTentacleBoss();
-          g.batchWaveStep = 3;
-        } else if (g.batchWaveStep === 3 && livingZombies <= 4 && remainingToSpawn > 0) {
-          const count = Math.min(10, remainingToSpawn);
-          for (let b = 0; b < count; b++) {
-            spawnSingleZombie();
+          spawnNecroPassTrio();
+          g.lastNecroPassWipeTime = 0;
+        } else if (!g.bossDefeated) {
+          const aliveNecro = g.zombies.filter(z => z.type === 'necro_pass' && !z.isDead && !z.isDying).length;
+          if (aliveNecro === 0) {
+            if (!g.lastNecroPassWipeTime || g.lastNecroPassWipeTime === 0) {
+              g.lastNecroPassWipeTime = currentTime;
+            } else if (currentTime - g.lastNecroPassWipeTime >= 6000) {
+              // 6 seconds passed after all 3 die: respawn the trio!
+              spawnNecroPassTrio();
+              g.lastNecroPassWipeTime = 0;
+            }
+          } else {
+            g.lastNecroPassWipeTime = 0;
           }
-          g.batchWaveStep = 4;
         }
       } else if (day !== 3) {
-        // Normal Nights: Batch Spawning
-        // Wave 1: Exactly 20 zombies spawn all at once at the start
-        // When living zombies drop to 10 or fewer: Wave 2 spawns 25 zombies all at once
-        // When living zombies drop to 10 or fewer: Wave 3 spawns 35 zombies all at once
+        // Normal Nights: 20-Zombie Tactical Formations with Anti-Lag Batching
+        // "واجعل عدد زومبي الذين يظهرون بشاشة 20واحد واذا تم قتل 19 واحد موجودين بشاشة اجعل 20 زومبي يدخلون اي حتى لا يصبح لاق بسبب زومبي الكثيرين بالشاشة واجعل ظهور زومبي بشكل مرتب... بتشكيلات مختلفة في جميع ليالي ماعدا ليالي التي يظهر بها زعماء ولا تنسى ان ليالي عادية يظهرون 20 زومبي في شاشة واذا تبقى واحد تظهر دفعة من 20 زومبي وهكذا الى ان يتم قتل زومبي وفوز بليلة"
         const livingZombies = g.zombies.filter(z => !z.isDead && !z.isDying).length;
         const remainingToSpawn = g.totalZombiesToSpawn - g.zombiesSpawned;
 
         if (g.batchWaveStep === 1) {
+          // First batch of up to 20 zombies enters in structured tactical formation
           const count = Math.min(20, remainingToSpawn);
-          for (let b = 0; b < count; b++) {
-            spawnSingleZombie();
+          if (count > 0) {
+            spawnFormationBatch(g.batchWaveIndex, count);
+            g.batchWaveIndex++;
+            audio.playZombieGroan(1.15);
+            g.lastBatchSpawnTime = currentTime;
           }
-          if (count > 0) audio.playZombieGroan(1.15);
           g.batchWaveStep = 2;
-        } else if (g.batchWaveStep === 2 && livingZombies <= 10 && remainingToSpawn > 0) {
-          const count = Math.min(25, remainingToSpawn);
-          for (let b = 0; b < count; b++) {
-            spawnSingleZombie();
+        } else if (livingZombies <= 1 && remainingToSpawn > 0 && currentTime - g.lastBatchSpawnTime > 400) {
+          // When 19 are killed (only 1 or 0 remain alive on screen):
+          // Next batch of up to 20 zombies enters in a fresh tactical formation!
+          const count = Math.min(20, remainingToSpawn);
+          if (count > 0) {
+            spawnFormationBatch(g.batchWaveIndex, count);
+            g.batchWaveIndex++;
+            audio.playZombieGroan(1.15);
+            g.lastBatchSpawnTime = currentTime;
           }
-          if (count > 0) audio.playZombieGroan(1.15);
-          g.batchWaveStep = 3;
-        } else if (g.batchWaveStep === 3 && livingZombies <= 10 && remainingToSpawn > 0) {
-          const count = Math.min(35, remainingToSpawn);
-          for (let b = 0; b < count; b++) {
-            spawnSingleZombie();
-          }
-          if (count > 0) audio.playZombieGroan(1.15);
-          g.batchWaveStep = 4;
-        } else if (g.batchWaveStep >= 4 && livingZombies <= 10 && remainingToSpawn > 0) {
-          const count = Math.min(35, remainingToSpawn);
-          for (let b = 0; b < count; b++) {
-            spawnSingleZombie();
-          }
-          if (count > 0) audio.playZombieGroan(1.15);
-          g.batchWaveStep++;
         }
       } else {
         // Day 3 Glutton Boss Night
@@ -3234,22 +3643,6 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
             }
           }
 
-          if (zombie.type === 'armored' && !isHead) {
-            finalDamage = 0;
-            audio.playMechanicalClick();
-            for (let sp = 0; sp < 3; sp++) {
-              g.particles.push({
-                x: zombie.x - 6,
-                y: hitSubY,
-                vx: -(2 + Math.random() * 2),
-                vy: (Math.random() - 0.5) * 3,
-                color: '#facc15',
-                size: 2,
-                life: 6,
-                maxLife: 6
-              });
-            }
-          }
 
           // 3-TENTACLE BOSS: Only takes damage on its tentacles!
           // "زعيم مجسات لا يتاثر بطلقات النار الا اذا كانت على مجساته وتكون نهاية مجساته مخلب مدبب وايضا عندما يصل صحة مجساته الى صفر تسقط ويخرج منه دماء لمدة اربع ثواني ويتالم ويصبح اسرع قليلا وعندما يفقد ثلاثة مجساته اجعل له انيمشن يسقط على الارض على ضهره ويرفع يديه لبشريتين فوق وثم تنتهي ليلة"
@@ -4295,8 +4688,12 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
           }
         } else {
           // Dedicated Pixel Art rendering per zombie type
-          if (z.isBoss || z.type === 'boss_glutton') {
+          if (z.type === 'boss_tentacle') {
+            drawTentacleBoss(ctx, z, currentTime, language);
+          } else if (z.isBoss || z.type === 'boss_glutton') {
             drawGluttonBoss(ctx, z, currentTime, language);
+          } else if (z.type === 'necro_pass') {
+            drawNecroPassZombie(ctx, z, currentTime);
           } else if (z.type === 'fat_zombie') {
             drawFatZombie(ctx, z, currentTime);
           } else if (z.type === 'spitter') {
@@ -4352,12 +4749,26 @@ export const CombatCanvas: React.FC<CombatCanvasProps> = ({
       // Draw Bullets
       ctx.save();
       g.bullets.forEach(b => {
-        ctx.strokeStyle = b.isPlayerBullet ? '#fef08a' : '#7dd3fc';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(b.x, b.y);
-        ctx.lineTo(b.x - b.vx * 0.9, b.y - b.vy * 0.9);
-        ctx.stroke();
+        if (b.isNail) {
+          // Sharp steel nail rendering: silver-gray body with white metallic tip
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(b.x, b.y);
+          ctx.lineTo(b.x - b.vx * 0.75, b.y - b.vy * 0.75);
+          ctx.stroke();
+
+          // Steel nail point/head
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(b.x - 1, b.y - 1, 2.5, 2.5);
+        } else {
+          ctx.strokeStyle = b.isPlayerBullet ? '#fef08a' : '#7dd3fc';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(b.x, b.y);
+          ctx.lineTo(b.x - b.vx * 0.9, b.y - b.vy * 0.9);
+          ctx.stroke();
+        }
       });
       ctx.restore();
 

@@ -1,41 +1,41 @@
 import { Weapon, Survivor, CraftingRecipe, WeaponId } from '../types/game';
 
 export const INITIAL_WEAPONS: Record<WeaponId, Weapon> = {
-  glock: {
-    id: 'glock',
-    name: 'Glock 19 (9mm)',
-    nameAr: 'مسدس جلوك 19 (9 ملم)',
+  nail_gun: {
+    id: 'nail_gun',
+    name: 'Twin Nail Gun',
+    nameAr: 'مسدس المسامير (مسدس البسامير)',
     category: 'pistol',
-    damage: 26,
-    fireRate: 360,
-    clipSize: 15,
-    reloadTime: 1.4,
+    damage: 22, // 22 damage per nail = 44 total twin impact (balanced power)
+    fireRate: 380, // Balanced semi-automatic cycling rate (neither machine gun nor sluggish)
+    clipSize: 20,
+    reloadTime: 1.5,
     spread: 0.04,
-    pellets: 1,
-    range: 900,
-    unlocked: true,
-    ammoType: '9mm',
+    pellets: 2, // Fires 2 nails per trigger pull
+    range: 850,
+    unlocked: true, // Player starts with this on Night 1!
+    ammoType: 'nails',
     isAutomatic: false,
-    description: 'Standard reliable semi-automatic sidearm found in store security desk. Deliberate, accurate shots.',
-    descriptionAr: 'مسدس أمني نصف آلي دقيق وسريع التلقيم، يطلق طلقة واحدة مع كل نقرة للدفاع الموزون.'
+    description: 'Hardware pneumatic nail gun modified for survival. Fires two heavy steel nails per pull with balanced recoil and steady cadence.',
+    descriptionAr: 'مسدس مسامير هوائي متوازن القوة والسرعة، يطلق مسمارين فولاذيين متوازيين مع كل ضغطة زناد للدفاع عن السوبرماركت في الليلة الأولى.'
   },
-  revolver: {
-    id: 'revolver',
-    name: '.357 Security Magnum',
-    nameAr: 'ماجنوم الحراسة .357',
-    category: 'pistol',
-    damage: 65,
-    fireRate: 580,
-    clipSize: 6,
-    reloadTime: 2.1,
-    spread: 0.02,
+  mp40: {
+    id: 'mp40',
+    name: 'MP40 Submachine Gun',
+    nameAr: 'رشاش MP40',
+    category: 'smg',
+    damage: 24,
+    fireRate: 140, // Fast fire rate slightly below average (~430 RPM)
+    clipSize: 30, // 30-round magazine
+    reloadTime: 1.8,
+    spread: 0.07,
     pellets: 1,
-    range: 1000,
+    range: 850,
     unlocked: false,
-    ammoType: '357',
-    isAutomatic: false,
-    description: 'Heavy security revolver. Massive stopping power that stops running zombies dead in their tracks.',
-    descriptionAr: 'مسدس ثقيل بقوة دفع مرعبة، يسقط الزومبي المندفع بطلقة واحدة في الصدر.'
+    ammoType: 'smg', // SMG ammo
+    isAutomatic: true,
+    description: 'Classic durable submachine gun. Delivers controlled, rapid automatic bursts using 30-round SMG box magazines.',
+    descriptionAr: 'رشاش أوتوماتيكي بمخزن يتسع لـ 30 طلقة، ومعدل إطلاق سريع متزن ومحكوم بذخيرة SMG.'
   },
   shotgun: {
     id: 'shotgun',
@@ -55,59 +55,23 @@ export const INITIAL_WEAPONS: Record<WeaponId, Weapon> = {
     description: 'Manual pump-action shotgun. Fires 5 deadly buckshot pellets with a deliberate pump between each blast.',
     descriptionAr: 'بندقية صيد بضخ يدوي، تطلق 5 خراطيش رش فتاكة وتتطلب سحب المقبض بين كل طلقة.'
   },
-  uzi: {
-    id: 'uzi',
-    name: 'Micro Uzi 9mm',
-    nameAr: 'رشاش ميكرو عوزي',
-    category: 'smg',
-    damage: 20,
-    fireRate: 110,
-    clipSize: 32,
-    reloadTime: 1.8,
-    spread: 0.10,
-    pellets: 1,
-    range: 750,
-    unlocked: false,
-    ammoType: '9mm',
-    isAutomatic: true,
-    description: 'Fully automatic submachine gun. Blistering rate of fire when holding trigger.',
-    descriptionAr: 'رشاش آلي بالكامل بمعدل إطلاق فائق السرعة، يحصد الركاضين عند الاستمرار بالضغط.'
-  },
-  m4: {
-    id: 'm4',
-    name: 'M4A1 Assault Rifle',
-    nameAr: 'بندقية هجومية M4A1',
+  pkc: {
+    id: 'pkc',
+    name: 'PKC Heavy Machine Gun',
+    nameAr: 'رشاش بي كي سي (PKC)',
     category: 'rifle',
-    damage: 38,
-    fireRate: 145,
-    clipSize: 45,
-    reloadTime: 2.2,
-    spread: 0.05,
+    damage: 46,
+    fireRate: 120,
+    clipSize: 80,
+    reloadTime: 90, // 1.5 minutes (90 seconds)
+    spread: 0.08,
     pellets: 1,
     range: 1100,
     unlocked: false,
     ammoType: 'rifle',
     isAutomatic: true,
-    description: 'Military-grade fully automatic rifle. Sustained accurate fire with high penetration.',
-    descriptionAr: 'بندقية هجومية عسكرية آلية بقوة نارية واختراق عالي، تحصد كل ما يقترب من السوبرماركت.'
-  },
-  hunting_rifle: {
-    id: 'hunting_rifle',
-    name: '.308 Scoped Hunting Rifle',
-    nameAr: 'بندقية قنص وصيد .308',
-    category: 'rifle',
-    damage: 140,
-    fireRate: 1150,
-    clipSize: 5,
-    reloadTime: 2.8,
-    spread: 0.01,
-    pellets: 1,
-    range: 1400,
-    unlocked: false,
-    ammoType: 'rifle',
-    isAutomatic: false,
-    description: 'High-caliber bolt-action rifle. Pierces through multiple infected with instant headshot kills.',
-    descriptionAr: 'بندقية قنص دقيقة بمقبض ميكانيكي، تصفي الزومبي الضخم بطلقة رأس حاسمة.'
+    description: 'Heavy squad automatic machine gun with an 80-round belt box. An allied survivor must spend 90 seconds (1.5 minutes) reloading it while you use your other weapon.',
+    descriptionAr: 'رشاش آلي ثقيل بحزام 80 طلقة وقوة هائلة. يتوقف أحد الناجين لتلقيمه لمدة دقيقة ونصف (90 ثانية) بينما تواصل القتال بسلاحك الآخر.'
   },
   knife: {
     id: 'knife',
@@ -127,24 +91,6 @@ export const INITIAL_WEAPONS: Record<WeaponId, Weapon> = {
     description: 'Sharp store utility blade. Zero ammo required for desperate close encounters.',
     descriptionAr: 'سكين حاد لا يحتاج لأي ذخيرة للمواجهات القريبة الطارئة.'
   },
-  spiked_bat: {
-    id: 'spiked_bat',
-    name: 'Spiked Baseball Bat',
-    nameAr: 'مضرب بيسبول بمسامير',
-    category: 'melee',
-    damage: 48,
-    fireRate: 550,
-    clipSize: 1,
-    reloadTime: 0.1,
-    spread: 0.15,
-    pellets: 1,
-    range: 100,
-    unlocked: false,
-    ammoType: 'none',
-    isAutomatic: false,
-    description: 'Heavy sports club wrapped in supermarket barbed wire.',
-    descriptionAr: 'مضرب رياضي ثقيل ملفوف بأسلاك شائكة ومسامير، يسحق الجماجم بضربة قوية.'
-  },
   plasma_rifle: {
     id: 'plasma_rifle',
     name: 'Incendiary Plasma Cannon',
@@ -162,24 +108,6 @@ export const INITIAL_WEAPONS: Record<WeaponId, Weapon> = {
     isAutomatic: true,
     description: 'Experimental directed-energy beam. Targets a single zombie with ramping damage from 2 to 6, vaporizing acid spits and burning targets.',
     descriptionAr: 'سلاح بلازما يطلق شعاعاً حارقاً على زومبي واحد بضرر يبدأ بـ 2 ويتصاعد كل ثانية حتى 6، ويدمر بصقات الحمض بالكامل!'
-  },
-  pkc: {
-    id: 'pkc',
-    name: 'PKC Heavy Machine Gun',
-    nameAr: 'رشاش بي كي سي (PKC)',
-    category: 'rifle',
-    damage: 46,
-    fireRate: 120,
-    clipSize: 80,
-    reloadTime: 90, // 1.5 minutes (90 seconds)
-    spread: 0.08,
-    pellets: 1,
-    range: 1100,
-    unlocked: false,
-    ammoType: 'rifle',
-    isAutomatic: true,
-    description: 'Heavy squad automatic machine gun with an 80-round belt box. An allied survivor must spend 90 seconds (1.5 minutes) reloading it while you use your other weapon.',
-    descriptionAr: 'رشاش آلي ثقيل بحزام 80 طلقة وقوة هائلة. يتوقف أحد الناجين لتلقيمه لمدة دقيقة ونصف (90 ثانية) بينما تواصل القتال بسلاحك الآخر.'
   }
 };
 
@@ -190,15 +118,15 @@ export const INITIAL_SURVIVORS: Survivor[] = [
     nameAr: 'براق رجل الأمن',
     role: 'Security Guard',
     roleAr: 'حارس أمن السوبرماركت',
-    bioAr: 'كان في نوبة الحراسة الليلية عند بدء تفشي الوباء. قناص ماهر يعرف كل زوايا المتجر ويحمل مسدس الماجنوم.',
-    bioEn: 'Store security guard with razor-sharp aim. Carries a magnum and executes instant headshots.',
+    bioAr: 'كان في نوبة الحراسة الليلية عند بدء تفشي الوباء. قناص ماهر يعرف كل زوايا المتجر ويحمل الشوزن الدفاعي.',
+    bioEn: 'Store security guard with razor-sharp aim. Carries a shotgun and executes instant headshots.',
     health: 100,
     maxHealth: 100,
     hunger: 70,
     thirst: 65,
     isRecruited: false,
     isDead: false,
-    weaponId: 'revolver',
+    weaponId: 'shotgun',
     perkAr: 'قناص الرؤوس الخماسي: يصيب 5 زومبي هيدشوت فوري كل 20 ثانية.',
     perkEn: 'Five-fold Headshot: Instantly snipes 5 zombies with lethal headshots every 20 seconds.',
     accuracy: 0.88,
@@ -212,15 +140,15 @@ export const INITIAL_SURVIVORS: Survivor[] = [
     nameAr: 'شهد الصيدلانية',
     role: 'Pharmacist',
     roleAr: 'صيدلانية السوبرماركت',
-    bioAr: 'اختبأت داخل صيدلية المتجر ومعها مواد كيميائية حارقة وإمدادات طبية. تطلق سهاماً كيميائية حارقة وتزيد فرص العثور على بطاريات.',
-    bioEn: 'Supermarket pharmacist armed with chemical incendiary arrows and battlefield first aid. Doubles battery scavenge chances.',
+    bioAr: 'اختبأت داخل صيدلية المتجر ومعها مواد كيميائية حارقة وإمدادات طبية. تحمل رشاش MP40 وتطلق سهاماً كيميائية حارقة وتزيد فرص العثور على بطاريات.',
+    bioEn: 'Supermarket pharmacist armed with MP40 SMG and chemical incendiary arrows. Doubles battery scavenge chances.',
     health: 90,
     maxHealth: 90,
     hunger: 60,
     thirst: 50,
     isRecruited: false,
     isDead: false,
-    weaponId: 'uzi',
+    weaponId: 'mp40',
     perkAr: 'السهم الناري الحارق ومضاعفة البطاريات: تحرق كل الزومبي 5 ثوانٍ، وتضاعف فرصة استخراج بطاريات البلازما.',
     perkEn: 'Incendiary Arrow & Battery Bonus: Ignites zombies for 5s and gives chance for 2 batteries during scavenging.',
     accuracy: 0.78,
@@ -353,42 +281,55 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
     }
   },
   {
-    id: 'craft_9mm',
-    name: 'Repack 9mm Ammo Box (30 rounds)',
-    nameAr: 'تصنيع علبة ذخيرة 9 ملم (30 طلقة)',
+    id: 'craft_nails',
+    name: 'Craft Steel Nails (60 nails)',
+    nameAr: 'تصنيع مسامير فولاذية (60 مسمار)',
+    category: 'ammo',
+    cost: { scrapMetal: 1 },
+    outputCount: 60,
+    description: 'Forges supermarket scrap wire and metal into 60 sharp nails for the Twin Nail Gun.',
+    descriptionAr: 'يعيد تدوير الخردة والأسلاك لصناعة 60 مسماراً فولاذياً لمسدس المسامير.',
+    craftEffect: (state) => {
+      state.ammoStock.nails += 60;
+    }
+  },
+  {
+    id: 'craft_smg',
+    name: 'Craft SMG Ammunition (60 rounds)',
+    nameAr: 'تصنيع ذخيرة SMG لرشاش MP40 (60 طلقة)',
     category: 'ammo',
     cost: { scrapMetal: 1, chemicals: 1 },
-    outputCount: 30,
-    description: 'Molds scrap lead and powder into 30 rounds of 9mm ammunition.',
-    descriptionAr: 'يعيد تدوير الخردة والبارود لصناعة 30 طلقة لمسدس الجلوك والرشاش.',
+    outputCount: 60,
+    description: 'Molds scrap lead and gunpowder into 60 rounds of SMG ammunition for the MP40.',
+    descriptionAr: 'يعيد تدوير الخردة والبارود لصناعة 60 طلقة ذخيرة SMG لرشاش MP40.',
     craftEffect: (state) => {
-      state.ammoStock['9mm'] += 30;
+      state.ammoStock.smg += 60;
     }
   },
   {
     id: 'craft_shells',
-    name: 'Handload Shotgun Shells (10 shells)',
-    nameAr: 'حشو خراطيش الشوزن (10 خراطيش)',
+    name: 'Handload Shotgun Shells (60 shells)',
+    nameAr: 'تصنيع خراطيش الشوزن (60 خرطوشة)',
     category: 'ammo',
     cost: { scrapMetal: 1, chemicals: 1 },
-    outputCount: 10,
-    description: 'Loads empty plastic shells with metal ball bearings. Yields 10 shotgun shells.',
-    descriptionAr: 'يملأ أظرف البنادق بالكرات الفولاذية والبارود للحصول على 10 طلقات شوزن.',
+    outputCount: 60,
+    description: 'Loads empty plastic shells with metal ball bearings. Yields 60 shotgun shells.',
+    descriptionAr: 'يملأ أظرف البنادق بالكرات الفولاذية والبارود للحصول على 60 طلقة شوزن.',
     craftEffect: (state) => {
-      state.ammoStock['shell'] += 10;
+      state.ammoStock.shell += 60;
     }
   },
   {
     id: 'craft_rifle',
-    name: 'Machined Rifle Cartridges (25 rounds)',
-    nameAr: 'تلقيم ذخيرة بنادق (25 طلقة)',
+    name: 'Machined Rifle Cartridges (60 rounds)',
+    nameAr: 'تصنيع ذخيرة رشاش PKC (60 طلقة)',
     category: 'ammo',
     cost: { scrapMetal: 2, chemicals: 2 },
-    outputCount: 25,
-    description: 'Precise rifle ammunition compatible with M4A1 and Hunting Rifle.',
-    descriptionAr: 'ذخيرة دقيقة عالية الضغط لبندقية M4 وقناصة الصيد.',
+    outputCount: 60,
+    description: 'High-caliber linked ammunition compatible with the PKC Heavy Machine Gun.',
+    descriptionAr: 'ذخيرة دقيقة عالية القوة لرشاش PKC الثقيل (60 طلقة).',
     craftEffect: (state) => {
-      state.ammoStock['rifle'] += 25;
+      state.ammoStock.rifle += 60;
     }
   }
 ];

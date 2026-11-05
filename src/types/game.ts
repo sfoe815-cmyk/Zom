@@ -12,15 +12,11 @@ export type Language = 'ar' | 'en';
 
 export type WeaponId = 
   | 'knife'
-  | 'glock'
-  | 'revolver'
-  | 'uzi'
+  | 'nail_gun'
+  | 'mp40'
   | 'shotgun'
-  | 'm4'
-  | 'hunting_rifle'
-  | 'spiked_bat'
-  | 'plasma_rifle'
-  | 'pkc';
+  | 'pkc'
+  | 'plasma_rifle';
 
 export interface Weapon {
   id: WeaponId;
@@ -32,10 +28,10 @@ export interface Weapon {
   clipSize: number;
   reloadTime: number; // seconds
   spread: number; // angle radians
-  pellets: number; // 1 for single bullet, 6-8 for shotgun
+  pellets: number; // 1 for single bullet, 2 for twin nails, 5-8 for shotgun
   range: number;
   unlocked: boolean;
-  ammoType: '9mm' | '357' | 'shell' | 'rifle' | 'none' | 'energy';
+  ammoType: 'nails' | 'smg' | 'shell' | 'rifle' | 'none' | 'energy';
   isAutomatic?: boolean;
   description: string;
   descriptionAr: string;
@@ -63,11 +59,11 @@ export interface Resources {
 }
 
 export interface AmmoStock {
-  '9mm': number;
-  '357': number;
-  'shell': number;
-  'rifle': number;
-  'energy': number;
+  nails: number;
+  smg: number;
+  shell: number;
+  rifle: number;
+  energy: number;
 }
 
 export interface CraftingRecipe {
@@ -130,7 +126,7 @@ export type ZombieType =
   | 'boss_glutton'
   | 'boss_tentacle'
   | 'brute'
-  | 'armored'
+  | 'necro_pass'
   | 'spitter';
 
 export interface TentacleData {
@@ -213,6 +209,7 @@ export interface BulletEntity {
   damage: number;
   isHeadshotCapable: boolean;
   isPlayerBullet: boolean;
+  isNail?: boolean;
   ownerName?: string;
   life: number;
 }

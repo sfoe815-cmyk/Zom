@@ -35,7 +35,8 @@ import {
   ChevronRight,
   ArrowRight,
   ArrowLeft,
-  Zap
+  Zap,
+  X
 } from 'lucide-react';
 
 interface DaytimeHubProps {
@@ -78,6 +79,7 @@ interface DaytimeHubProps {
 interface ExecutionReport {
   repairedHp: number;
   foundWeapon: Weapon | null;
+  foundWeapons?: Weapon[];
   foundSurvivor: Survivor | null;
   foundResources: Partial<Resources>;
   foundAmmo: Partial<AmmoStock>;
@@ -214,10 +216,10 @@ export const DaytimeHub: React.FC<DaytimeHubProps> = ({
       }
       gatheredResources.battery = batts;
 
-      gatheredAmmo['9mm'] = scavengeHours * 12;
-      gatheredAmmo['357'] = Math.floor(scavengeHours * 3);
-      gatheredAmmo['shell'] = Math.floor(scavengeHours * 4);
-      gatheredAmmo['rifle'] = Math.floor(scavengeHours * 6);
+      gatheredAmmo.nails = scavengeHours * 16;
+      gatheredAmmo.smg = scavengeHours * 12;
+      gatheredAmmo.shell = Math.floor(scavengeHours * 5);
+      gatheredAmmo.rifle = Math.floor(scavengeHours * 8);
 
       setResources(prev => ({
         food: prev.food + (gatheredResources.food || 0),
@@ -232,46 +234,63 @@ export const DaytimeHub: React.FC<DaytimeHubProps> = ({
 
       setAmmoStock(prev => ({
         ...prev,
-        '9mm': prev['9mm'] + (gatheredAmmo['9mm'] || 0),
-        '357': prev['357'] + (gatheredAmmo['357'] || 0),
-        shell: prev.shell + (gatheredAmmo.shell || 0),
-        rifle: prev.rifle + (gatheredAmmo.rifle || 0)
+        nails: (prev.nails || 0) + (gatheredAmmo.nails || 0),
+        smg: (prev.smg || 0) + (gatheredAmmo.smg || 0),
+        shell: (prev.shell || 0) + (gatheredAmmo.shell || 0),
+        rifle: (prev.rifle || 0) + (gatheredAmmo.rifle || 0)
       }));
     }
 
-    // 3. Search Weapons Warehouse (Requires exactly 5 hours per weapon! 1st = Shotgun, 2nd = Uzi)
-    let unlockedWeapon: Weapon | null = null;
+    // 3. Search Weapons Warehouse (Requires exactly 5 hours per weapon! 5h = 1 weapon, 10h = 2 weapons)
+    // "واصلح مشكلة ان لاعب لا يحصل على سلاح جديد اجعله يحصل على سلاح جديد كل مابحث عن سلاح عنده صرف خمس ساعات واذا صرف عشر ساعات سيحصل على سلاحيين جديدين"
+    const unlockedWeaponsList: Weapon[] = [];
     if (weaponHours >= 5) {
       const weaponsToFind = Math.floor(weaponHours / 5);
-      for (let w = 0; w < weaponsToFind; w++) {
-        let targetId: WeaponId | null = null;
-        if (!allWeapons.shotgun.unlocked) {
-          targetId = 'shotgun';
-        } else if (!allWeapons.uzi.unlocked) {
-          targetId = 'uzi';
-        } else {
-          const list: WeaponId[] = ['revolver', 'hunting_rifle', 'm4', 'spiked_bat'];
-          targetId = list.find(id => allWeapons[id] && !allWeapons[id].unlocked) || null;
-        }
+      // Working copy of allWeapons state to track unlocks sequentially across loop iterations
+      const updatedWeapons = { ...allWeapons };
 
-        if (targetId && allWeapons[targetId]) {
-          unlockedWeapon = { ...allWeapons[targetId], unlocked: true };
-          setAllWeapons(prev => ({
-            ...prev,
-            [targetId!]: { ...prev[targetId!], unlocked: true }
-          }));
+      // Guaranteed progression order for available weapons:
+      // 1st search: Shotgun
+      // 2nd search: MP40 SMG (30 rounds, fast balanced fire)
+      // 3rd search: PKC (80 rounds, 90s survivor reload)
+      // 4th search: Plasma Rifle
+      const searchOrder: WeaponId[] = [
+        'shotgun',
+        'mp40',
+        'pkc',
+        'plasma_rifle'
+      ];
+
+      for (let w = 0; w < weaponsToFind; w++) {
+        // Find next locked weapon in order, or any other locked weapon
+        const targetId = searchOrder.find(id => updatedWeapons[id] && !updatedWeapons[id].unlocked)
+          || (Object.keys(updatedWeapons) as WeaponId[]).find(id => !updatedWeapons[id].unlocked)
+          || null;
+
+        if (targetId && updatedWeapons[targetId]) {
+          const unlockedW: Weapon = { ...updatedWeapons[targetId], unlocked: true };
+          updatedWeapons[targetId] = unlockedW;
+          unlockedWeaponsList.push(unlockedW);
 
           // Give ammo for found weapon
           if (targetId === 'shotgun') {
-            setAmmoStock(prev => ({ ...prev, shell: prev.shell + 21 }));
-          } else if (targetId === 'uzi') {
-            setAmmoStock(prev => ({ ...prev, '9mm': prev['9mm'] + 64 }));
+            setAmmoStock(prev => ({ ...prev, shell: prev.shell + 60 }));
+          } else if (targetId === 'mp40') {
+            setAmmoStock(prev => ({ ...prev, smg: prev.smg + 90 }));
+          } else if (targetId === 'pkc') {
+            setAmmoStock(prev => ({ ...prev, rifle: prev.rifle + 160 }));
+          } else if (targetId === 'plasma_rifle') {
+            setResources(prev => ({ ...prev, battery: (prev.battery || 0) + 2 }));
           }
 
-          if (!secondaryWeapon) {
-            setSecondaryWeapon(unlockedWeapon);
+          if (!secondaryWeapon && unlockedWeaponsList.length === 1) {
+            setSecondaryWeapon(unlockedW);
           }
         }
+      }
+
+      if (unlockedWeaponsList.length > 0) {
+        setAllWeapons(updatedWeapons);
       }
     }
 
@@ -303,7 +322,8 @@ export const DaytimeHub: React.FC<DaytimeHubProps> = ({
     // Set Execution Report
     setExecutionReport({
       repairedHp,
-      foundWeapon: unlockedWeapon,
+      foundWeapon: unlockedWeaponsList[0] || null,
+      foundWeapons: unlockedWeaponsList,
       foundSurvivor: rescuedSurvivor,
       foundResources: gatheredResources,
       foundAmmo: gatheredAmmo
@@ -349,17 +369,14 @@ export const DaytimeHub: React.FC<DaytimeHubProps> = ({
       }));
     } else if (recipe.id === 'electric_grid') {
       setBarricade(prev => ({ ...prev, hasElectricGrid: true }));
-    } else if (recipe.id === 'spiked_bat_craft') {
-      setAllWeapons(prev => ({
-        ...prev,
-        spiked_bat: { ...prev.spiked_bat, unlocked: true }
-      }));
-    } else if (recipe.id === 'craft_9mm') {
-      setAmmoStock(prev => ({ ...prev, '9mm': prev['9mm'] + 30 }));
+    } else if (recipe.id === 'craft_nails') {
+      setAmmoStock(prev => ({ ...prev, nails: prev.nails + 60 }));
+    } else if (recipe.id === 'craft_smg') {
+      setAmmoStock(prev => ({ ...prev, smg: prev.smg + 60 }));
     } else if (recipe.id === 'craft_shells') {
-      setAmmoStock(prev => ({ ...prev, shell: prev.shell + 10 }));
+      setAmmoStock(prev => ({ ...prev, shell: prev.shell + 60 }));
     } else if (recipe.id === 'craft_rifle') {
-      setAmmoStock(prev => ({ ...prev, rifle: prev.rifle + 25 }));
+      setAmmoStock(prev => ({ ...prev, rifle: prev.rifle + 60 }));
     } else if (recipe.id === 'landmine' || recipe.id === 'floor_trap') {
       setMineCount(prev => prev + 2);
     }
@@ -1041,104 +1058,139 @@ export const DaytimeHub: React.FC<DaytimeHubProps> = ({
       {/* DISCOVERY & LOOT REPORT MODAL */}
       {showReportModal && executionReport && (
         <div 
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
           dir={language === 'ar' ? 'rtl' : 'ltr'}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowReportModal(false);
+          }}
         >
-          <div className="bg-slate-900 border border-amber-500/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 text-slate-100 animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500 flex items-center justify-center text-amber-400">
-                <PackageCheck className="w-6 h-6 animate-bounce" />
-              </div>
-              <div>
-                <span className="text-xs font-mono uppercase text-amber-400 font-bold">
-                  {language === 'ar' ? 'تقرير تمشيط النهار' : 'DAYTIME MISSION REPORT'}
-                </span>
-                <h3 className="text-xl font-extrabold text-white">
-                  {language === 'ar' ? 'تم تنفيذ خطة الساعات بنجاح!' : 'Daytime Activities Completed!'}
-                </h3>
-              </div>
-            </div>
-
-            {/* NEW WEAPON HIGHLIGHT CARD (IF FOUND!) */}
-            {executionReport.foundWeapon && (
-              <div className="bg-gradient-to-r from-amber-950/60 to-slate-900 border-2 border-amber-500 rounded-xl p-4 flex items-center gap-4 shadow-lg shadow-amber-950/40">
-                <div className="text-3xl">🔫</div>
+          <div className="bg-slate-900 border-2 border-amber-500/90 rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl flex flex-col max-h-[90vh] text-slate-100 animate-in fade-in zoom-in-95 duration-200 my-auto">
+            {/* Modal Header with Close Button */}
+            <div className="shrink-0 flex items-center justify-between border-b border-slate-800 pb-3 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/20 border border-amber-500 flex items-center justify-center text-amber-400">
+                  <PackageCheck className="w-5 h-5 sm:w-6 sm:h-6 animate-bounce" />
+                </div>
                 <div>
-                  <span className="text-[11px] font-mono text-amber-400 uppercase font-bold block">
-                    {language === 'ar' ? '🎉 سلاح ناري جديد تم العثور عليه!' : '🎉 NEW WEAPON DISCOVERED!'}
+                  <span className="text-[11px] font-mono uppercase text-amber-400 font-bold block">
+                    {language === 'ar' ? 'تقرير تمشيط النهار' : 'DAYTIME MISSION REPORT'}
                   </span>
-                  <h4 className="text-base font-extrabold text-white">
-                    {language === 'ar' ? executionReport.foundWeapon.nameAr : executionReport.foundWeapon.name}
-                  </h4>
-                  <p className="text-xs text-slate-300">
-                    {language === 'ar' ? executionReport.foundWeapon.descriptionAr : executionReport.foundWeapon.description}
-                  </p>
+                  <h3 className="text-base sm:text-lg font-extrabold text-white">
+                    {language === 'ar' ? 'تم تنفيذ خطة الساعات بنجاح!' : 'Daytime Activities Completed!'}
+                  </h3>
                 </div>
               </div>
-            )}
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                title={language === 'ar' ? 'إغلاق' : 'Close'}
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            {/* NEW SURVIVOR HIGHLIGHT CARD (IF FOUND!) */}
-            {executionReport.foundSurvivor && (
-              <div className="bg-gradient-to-r from-emerald-950/60 to-slate-900 border-2 border-emerald-500 rounded-xl p-4 flex items-center gap-4 shadow-lg shadow-emerald-950/40">
-                <div className="text-3xl">👥</div>
-                <div>
-                  <span className="text-[11px] font-mono text-emerald-400 uppercase font-bold block">
-                    {language === 'ar' ? '🎉 تم إنقاذ ناجٍ جديد!' : '🎉 NEW SURVIVOR RESCUED!'}
+            {/* Scrollable Content Body */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3 py-1">
+              {/* NEW WEAPONS HIGHLIGHT CARDS (IF FOUND!) */}
+              {executionReport.foundWeapons && executionReport.foundWeapons.length > 0 ? (
+                executionReport.foundWeapons.map((wpn, idx) => (
+                  <div key={wpn.id} className="bg-gradient-to-r from-amber-950/60 to-slate-900 border-2 border-amber-500 rounded-xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 shadow-lg shadow-amber-950/40">
+                    <div className="text-2xl sm:text-3xl">🔫</div>
+                    <div className="flex-1">
+                      <span className="text-[10px] sm:text-[11px] font-mono text-amber-400 uppercase font-bold block">
+                        {language === 'ar' 
+                          ? `🎉 سلاح ناري جديد تم العثور عليه (${idx + 1}/${executionReport.foundWeapons!.length})!` 
+                          : `🎉 NEW WEAPON DISCOVERED (${idx + 1}/${executionReport.foundWeapons!.length})!`}
+                      </span>
+                      <h4 className="text-sm sm:text-base font-extrabold text-white">
+                        {language === 'ar' ? wpn.nameAr : wpn.name}
+                      </h4>
+                      <p className="text-[11px] sm:text-xs text-slate-300">
+                        {language === 'ar' ? wpn.descriptionAr : wpn.description}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : executionReport.foundWeapon ? (
+                <div className="bg-gradient-to-r from-amber-950/60 to-slate-900 border-2 border-amber-500 rounded-xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 shadow-lg shadow-amber-950/40">
+                  <div className="text-2xl sm:text-3xl">🔫</div>
+                  <div>
+                    <span className="text-[10px] sm:text-[11px] font-mono text-amber-400 uppercase font-bold block">
+                      {language === 'ar' ? '🎉 سلاح ناري جديد تم العثور عليه!' : '🎉 NEW WEAPON DISCOVERED!'}
+                    </span>
+                    <h4 className="text-sm sm:text-base font-extrabold text-white">
+                      {language === 'ar' ? executionReport.foundWeapon.nameAr : executionReport.foundWeapon.name}
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-300">
+                      {language === 'ar' ? executionReport.foundWeapon.descriptionAr : executionReport.foundWeapon.description}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* NEW SURVIVOR HIGHLIGHT CARD (IF FOUND!) */}
+              {executionReport.foundSurvivor && (
+                <div className="bg-gradient-to-r from-emerald-950/60 to-slate-900 border-2 border-emerald-500 rounded-xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 shadow-lg shadow-emerald-950/40">
+                  <div className="text-2xl sm:text-3xl">👥</div>
+                  <div>
+                    <span className="text-[10px] sm:text-[11px] font-mono text-emerald-400 uppercase font-bold block">
+                      {language === 'ar' ? '🎉 تم إنقاذ ناجٍ جديد!' : '🎉 NEW SURVIVOR RESCUED!'}
+                    </span>
+                    <h4 className="text-sm sm:text-base font-extrabold text-white">
+                      {language === 'ar' ? executionReport.foundSurvivor.nameAr : executionReport.foundSurvivor.name} ({language === 'ar' ? executionReport.foundSurvivor.roleAr : executionReport.foundSurvivor.role})
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-300">
+                      {language === 'ar' ? executionReport.foundSurvivor.perkAr : executionReport.foundSurvivor.perkEn}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Summary Breakdown Grid */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs">
+                <div className="bg-slate-800/80 p-2.5 sm:p-3 rounded-xl border border-slate-700">
+                  <span className="text-slate-400 block mb-0.5 text-[11px]">
+                    {language === 'ar' ? 'صيانة المتراس:' : 'Barricade Repaired:'}
                   </span>
-                  <h4 className="text-base font-extrabold text-white">
-                    {language === 'ar' ? executionReport.foundSurvivor.nameAr : executionReport.foundSurvivor.name} ({language === 'ar' ? executionReport.foundSurvivor.roleAr : executionReport.foundSurvivor.role})
-                  </h4>
-                  <p className="text-xs text-slate-300">
-                    {language === 'ar' ? executionReport.foundSurvivor.perkAr : executionReport.foundSurvivor.perkEn}
-                  </p>
+                  <span className="font-mono text-sm sm:text-base font-bold text-sky-400">
+                    +{executionReport.repairedHp} HP
+                  </span>
+                </div>
+
+                <div className="bg-slate-800/80 p-2.5 sm:p-3 rounded-xl border border-slate-700">
+                  <span className="text-slate-400 block mb-0.5 text-[11px]">
+                    {language === 'ar' ? 'المؤن والخامات المجمعة:' : 'Supplies Gathered:'}
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap font-mono font-bold text-amber-300 text-[11px]">
+                    {Object.entries(executionReport.foundResources).map(([k, v]) => (
+                      <span key={k}>{k}: +{v}</span>
+                    ))}
+                    {Object.keys(executionReport.foundResources).length === 0 && <span>-</span>}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Summary Breakdown Grid */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
-                <span className="text-slate-400 block mb-1">
-                  {language === 'ar' ? 'صيانة المتراس:' : 'Barricade Repaired:'}
-                </span>
-                <span className="font-mono text-base font-bold text-sky-400">
-                  +{executionReport.repairedHp} HP
-                </span>
-              </div>
-
-              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
-                <span className="text-slate-400 block mb-1">
-                  {language === 'ar' ? 'المؤن والخامات المجمعة:' : 'Supplies Gathered:'}
-                </span>
-                <div className="flex items-center gap-2 flex-wrap font-mono font-bold text-amber-300">
-                  {Object.entries(executionReport.foundResources).map(([k, v]) => (
-                    <span key={k}>{k}: +{v}</span>
-                  ))}
-                  {Object.keys(executionReport.foundResources).length === 0 && <span>-</span>}
+              {/* Ammo Added */}
+              <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60 flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400 text-[11px]">{language === 'ar' ? 'ذخيرة أضيفت للمخزن:' : 'Ammo added:'}</span>
+                <div className="flex items-center gap-2 sm:gap-3 text-slate-200 text-[11px]">
+                  <span>{language === 'ar' ? 'مسامير' : 'Nails'}: +{executionReport.foundAmmo.nails || 0}</span>
+                  <span>SMG: +{executionReport.foundAmmo.smg || 0}</span>
+                  <span>{language === 'ar' ? 'شوزن' : 'Shells'}: +{executionReport.foundAmmo.shell || 0}</span>
+                  <span>{language === 'ar' ? 'بنادق' : 'Rifle'}: +{executionReport.foundAmmo.rifle || 0}</span>
                 </div>
               </div>
             </div>
 
-            {/* Ammo Added */}
-            <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60 flex items-center justify-between text-xs font-mono">
-              <span className="text-slate-400">{language === 'ar' ? 'ذخيرة أضيفت للمخزن:' : 'Ammo added:'}</span>
-              <div className="flex items-center gap-3 text-slate-200">
-                <span>9mm: +{executionReport.foundAmmo['9mm'] || 0}</span>
-                <span>.357: +{executionReport.foundAmmo['357'] || 0}</span>
-                <span>Shells: +{executionReport.foundAmmo.shell || 0}</span>
-                <span>Rifle: +{executionReport.foundAmmo.rifle || 0}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3 pt-2">
+            {/* Sticky Actions Footer */}
+            <div className="shrink-0 flex items-center gap-2 sm:gap-3 pt-3 border-t border-slate-800 mt-1">
               <button
                 onClick={() => {
                   setShowReportModal(false);
                   setActiveTab('ARMORY'); // Take user straight to Armory to view their new weapon!
                 }}
-                className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 sm:py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow"
               >
                 <Crosshair className="w-4 h-4 text-sky-400" />
                 <span>{language === 'ar' ? 'تجهيز السلاح في المخزن' : 'Equip Weapon in Armory'}</span>
@@ -1146,7 +1198,7 @@ export const DaytimeHub: React.FC<DaytimeHubProps> = ({
 
               <button
                 onClick={() => setShowReportModal(false)}
-                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 sm:py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-lg shadow-amber-950/40"
               >
                 <span>{language === 'ar' ? 'ممتاز، متابعة' : 'Done, Continue'}</span>
               </button>
@@ -1173,10 +1225,10 @@ export const DaytimeHub: React.FC<DaytimeHubProps> = ({
 
             {/* Ammo Stocks */}
             <div className="flex items-center gap-3 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-mono">
-              <span className="text-slate-400">9mm: <b className="text-slate-200">{ammoStock['9mm']}</b></span>
-              <span className="text-slate-400">.357: <b className="text-slate-200">{ammoStock['357']}</b></span>
-              <span className="text-slate-400">Shells: <b className="text-slate-200">{ammoStock.shell}</b></span>
-              <span className="text-slate-400">Rifle: <b className="text-slate-200">{ammoStock.rifle}</b></span>
+              <span className="text-slate-400">{language === 'ar' ? 'مسامير' : 'Nails'}: <b className="text-slate-200">{ammoStock.nails ?? 0}</b></span>
+              <span className="text-slate-400">SMG: <b className="text-slate-200">{ammoStock.smg ?? 0}</b></span>
+              <span className="text-slate-400">{language === 'ar' ? 'شوزن' : 'Shells'}: <b className="text-slate-200">{ammoStock.shell ?? 0}</b></span>
+              <span className="text-slate-400">{language === 'ar' ? 'بنادق' : 'Rifle'}: <b className="text-slate-200">{ammoStock.rifle ?? 0}</b></span>
             </div>
           </div>
 

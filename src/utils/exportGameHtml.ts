@@ -115,7 +115,7 @@ export function generateStandaloneHtml(): string {
     <!-- Top Combat HUD -->
     <div id="topHud">
       <div id="hudNight" style="color: #fbbf24; font-size: 14px;">الليلة 1</div>
-      <div class="badge" id="hudZombies" style="color: #f87171;">الزومبي المتبقي: 35</div>
+      <div class="badge" id="hudZombies" style="color: #f87171;">الزومبي المتبقي: 45</div>
       <div class="badge" id="hudBarricade" style="color: #38bdf8;">🛡️ المتراس: 400/400 HP</div>
       <div id="bossBadge" class="badge" style="color: #ef4444; border-color: #ef4444; display: none;">☠ الزعيم الأكول (7000 HP)</div>
     </div>
@@ -126,8 +126,8 @@ export function generateStandaloneHtml(): string {
     <!-- Bottom Combat Toolbar -->
     <div id="bottomToolbar">
       <div style="display: flex; gap: 8px; align-items: center;">
-        <span class="badge" id="tbWeapon">بندقية صيد بامب شوزن (5 مقذوفات)</span>
-        <span class="badge" id="tbAmmo" style="color: #34d399;">7 / 42</span>
+        <span class="badge" id="tbWeapon">مسدس البسامير (مسماران متتاليان)</span>
+        <span class="badge" id="tbAmmo" style="color: #34d399;">20 / 120</span>
         <span class="badge" id="tbPlasmaDmg" style="color: #fde047; display: none;">⚡ الضرر: 2/6</span>
       </div>
       <div style="display: flex; gap: 6px;">
@@ -144,7 +144,7 @@ export function generateStandaloneHtml(): string {
       <div class="modal-card">
         <h2 style="color: #fbbf24; margin-bottom: 12px; font-size: 22px;">بزوغ الفجر على السوبرماركت! ☀️</h2>
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
-          <div style="background:#020617; padding:12px; border-radius:8px; border:1px solid #10b981; color:#34d399; font-weight:bold; font-size:15px;" id="sumKills">☠ عدد قتلى الزومبي: 35</div>
+          <div style="background:#020617; padding:12px; border-radius:8px; border:1px solid #10b981; color:#34d399; font-weight:bold; font-size:15px;" id="sumKills">☠ عدد قتلى الزومبي: 45</div>
           <div style="background:#020617; padding:12px; border-radius:8px; border:1px solid #f59e0b; color:#fbbf24; font-weight:bold; font-size:15px;" id="sumHeadshots">🎯 إصابات الرأس القاتلة (هيدشوت): 12</div>
           <div style="background:#020617; padding:12px; border-radius:8px; border:1px solid #ef4444; color:#f87171; font-weight:bold; font-size:15px;" id="sumDamage">🛡️ ضرر الزومبي للمتاريس: -0 HP</div>
         </div>
@@ -305,15 +305,15 @@ export function generateStandaloneHtml(): string {
     let barricadeHp = 400, maxBarricadeHp = 400;
     let playerY = 270, targetPlayerY = 270;
     let mouseX = 500, mouseY = 270, isMouseDown = false;
-    let activeWeapon = 'shotgun';
-    let secondaryWeapon = 'plasma_rifle';
-    let currentClip = 7, maxClip = 7, totalShells = 45;
+    let activeWeapon = 'nail_gun';
+    let secondaryWeapon = 'mp40';
+    let currentClip = 20, maxClip = 20, totalShells = 45, totalNails = 120, totalSmg = 60;
     let plasmaBattery = 20.0; // 20.0s duration
     let plasmaTargetId = null, plasmaFocusTime = 0, plasmaDamage = 2; // Ramps 2 to 6
     let plasmaBeamEnd = { x: 960, y: 270 };
     let bullets = [], particles = [], zombies = [], acidSpits = [], landmines = [], fireZones = [];
     let zombiesKilled = 0, headshots = 0, barricadeDamageTaken = 0;
-    let totalNightZombies = 35, zombiesSpawned = 0;
+    let totalNightZombies = 45, zombiesSpawned = 0;
     let waveStep = 1, isEnded = false, isCombat = true;
     let equippedAbility = 'baraq';
     let abilityCooldown = 0;
@@ -364,7 +364,9 @@ export function generateStandaloneHtml(): string {
       playSfx('click');
       const temp = activeWeapon; activeWeapon = secondaryWeapon; secondaryWeapon = temp;
       if (activeWeapon === 'shotgun') { maxClip = 7; currentClip = 7; }
-      else if (activeWeapon === 'uzi') { maxClip = 32; currentClip = 32; }
+      else if (activeWeapon === 'mp40') { maxClip = 30; currentClip = 30; }
+      else if (activeWeapon === 'pkc') { maxClip = 80; currentClip = 80; }
+      else if (activeWeapon === 'nail_gun') { maxClip = 20; currentClip = 20; }
       else { maxClip = 120; currentClip = 120; }
       plasmaTargetId = null; plasmaDamage = 2; updateUI();
     }
@@ -460,6 +462,21 @@ export function generateStandaloneHtml(): string {
           const spread = (Math.random() - 0.5) * 0.16;
           bullets.push({ x: startX, y: startY, vx: Math.cos(angle + spread) * 26, vy: Math.sin(angle + spread) * 26, dmg: 22, life: 42 });
         }
+      } else if (activeWeapon === 'nail_gun') {
+        if (currentClip <= 0) { reload(); return; }
+        currentClip--; playSfx('pistol');
+        // Two nails in tandem: one directly behind the other along the exact same trajectory
+        for (let p = 0; p < 2; p++) {
+          const distBehind = p * 24;
+          bullets.push({
+            x: startX - Math.cos(angle) * distBehind,
+            y: startY - Math.sin(angle) * distBehind,
+            vx: Math.cos(angle) * 28,
+            vy: Math.sin(angle) * 28,
+            dmg: 22,
+            life: 45
+          });
+        }
       } else {
         if (currentClip <= 0) { reload(); return; }
         currentClip--; playSfx('pistol');
@@ -501,18 +518,11 @@ export function generateStandaloneHtml(): string {
           spawnZombie(day === 1 ? (Math.random() < 0.12 ? 'fat' : 'normal') : day === 4 ? (Math.random() < 0.3 ? 'spitter' : 'normal') : 'normal');
         }
         waveStep = 2;
-      } else if (waveStep === 2 && living <= 10 && zombiesSpawned < totalNightZombies) {
-        const count = Math.min(25, totalNightZombies - zombiesSpawned);
+      } else if (living <= 1 && zombiesSpawned < totalNightZombies) {
+        const count = Math.min(20, totalNightZombies - zombiesSpawned);
         for (let i = 0; i < count; i++) {
           spawnZombie(day === 1 ? (Math.random() < 0.12 ? 'fat' : 'normal') : day === 4 ? (Math.random() < 0.3 ? 'spitter' : 'normal') : 'normal');
         }
-        waveStep = 3;
-      } else if (waveStep === 3 && living <= 10 && zombiesSpawned < totalNightZombies) {
-        const count = Math.min(35, totalNightZombies - zombiesSpawned);
-        for (let i = 0; i < count; i++) {
-          spawnZombie(day === 1 ? (Math.random() < 0.12 ? 'fat' : 'normal') : day === 4 ? (Math.random() < 0.3 ? 'spitter' : 'normal') : 'normal');
-        }
-        waveStep = 4;
       }
     }
 
@@ -614,7 +624,7 @@ export function generateStandaloneHtml(): string {
       document.getElementById('dayHubScreen').style.display = 'none';
       isCombat = true; isEnded = false;
       day++;
-      totalNightZombies = day === 2 ? 45 : day === 3 ? 16 : day === 4 ? 65 : totalNightZombies + 20;
+      totalNightZombies = day === 1 ? 45 : day === 2 ? 45 : day === 3 ? 58 : day === 4 ? 78 : day === 5 ? 86 : day === 6 ? 60 : day === 7 ? 115 : day === 8 ? 127 : day === 9 ? 139 : 139 + (day - 9) * 12;
       zombiesSpawned = 0; waveStep = 1; zombiesKilled = 0; headshots = 0; barricadeDamageTaken = 0;
       zombies = []; bullets = []; acidSpits = [];
       updateUI();

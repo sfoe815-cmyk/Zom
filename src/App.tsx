@@ -59,7 +59,7 @@ export default function App() {
 
   // Weapons & Loadout
   const [allWeapons, setAllWeapons] = useState<Record<WeaponId, Weapon>>(INITIAL_WEAPONS);
-  const [activeWeapon, setActiveWeapon] = useState<Weapon>(INITIAL_WEAPONS.glock);
+  const [activeWeapon, setActiveWeapon] = useState<Weapon>(INITIAL_WEAPONS.nail_gun);
   const [secondaryWeapon, setSecondaryWeapon] = useState<Weapon | null>(INITIAL_WEAPONS.knife);
 
   // Scavenged Survival Resources
@@ -76,10 +76,10 @@ export default function App() {
 
   // Ammo Reserves
   const [ammoStock, setAmmoStock] = useState<AmmoStock>({
-    '9mm': 90,
-    '357': 18,
-    shell: 21,
-    rifle: 60,
+    nails: 120,
+    smg: 60,
+    shell: 24,
+    rifle: 80,
     energy: 600
   });
 
@@ -114,7 +114,7 @@ export default function App() {
       reinforcedLevel: 1
     });
     setAllWeapons(INITIAL_WEAPONS);
-    setActiveWeapon(INITIAL_WEAPONS.glock);
+    setActiveWeapon(INITIAL_WEAPONS.nail_gun);
     setSecondaryWeapon(INITIAL_WEAPONS.knife);
     setResources({
       food: 4,
@@ -127,10 +127,10 @@ export default function App() {
       battery: 1
     });
     setAmmoStock({
-      '9mm': 90,
-      '357': 18,
-      shell: 21,
-      rifle: 60,
+      nails: 120,
+      smg: 60,
+      shell: 24,
+      rifle: 80,
       energy: 600
     });
     setSurvivors(INITIAL_SURVIVORS.map(s => ({ ...s, isRecruited: false, isDead: false, health: s.maxHealth })));
